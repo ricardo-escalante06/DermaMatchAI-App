@@ -1,48 +1,55 @@
 {
   "expo": {
-    "name": "NewDermaMatchApp",
-    "slug": "NewDermaMatchApp",
+    "name": "DermaMatchAI",
+    "slug": "DermaMatchAI",
     "version": "1.0.0",
+    "entryPoint": "App.js",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "newdermamatchapp",
+    "scheme": "DermaMatchAI",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "SUPABASE_URL": "https://ifnjzcxckkrmfijgcsly.supabase.co",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmbmp6Y3hja2tybWZpamdjc2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NTM4MTgsImV4cCI6MjA3NTUyOTgxOH0.lcacuPTp_sY1ODsM_p0JnQ7tgY3xkeSEm9grk832jFU"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.DermaMatchAI"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.anonymous.DermaMatchAI"
     },
     "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow DermaMatchAI to access your camera",
+          "microphonePermission": "Allow DermaMatchAI to access your microphone",
+          "recordAudioAndroid": true
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
+    ]
   }
 }

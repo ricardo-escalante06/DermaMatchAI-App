@@ -3,7 +3,7 @@
     "name": "DermaMatchAI",
     "slug": "DermaMatchAI",
     "version": "1.0.0",
-    "entryPoint": "App.js",
+    "entryPoint": "index.js",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "DermaMatchAI",

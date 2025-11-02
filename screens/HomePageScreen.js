@@ -51,13 +51,38 @@ export default function HomePageScreen({ navigation }) {
         <>
           <Text style={styles.sectionTitle}>Your Progress</Text>
           <GradientBoxContainer number={numberDays} />
-          <View style={styles.box} />
-          <View style={styles.box} />
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Your Past Scans</Text>
+            <TouchableOpacity
+              onPress={() => console.log("See all Past Scans pressed")}
+            >
+              <Text style={styles.seeAllText}>See all</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.box} />
 
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { maxWidth: 227 }]}>
+              Your Current Recommended Skincare Routine
+            </Text>
+            <TouchableOpacity
+              onPress={() => console.log("See all Skincare Routine pressed")}
+            >
+              <Text style={styles.seeAllText}>See all</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.box} />
 
-          <View style={styles.box} />
+          {/* Bottom right button */}
+          <View style={styles.bottomButtonContainer}>
+            <TouchableOpacity
+              style={styles.bottomButton}
+              onPress={() => console.log("Subscribe pressed")}
+            >
+              <Text style={styles.bottomButtonText}>Subscribe to Routine</Text>
+            </TouchableOpacity>
+          </View>
         </>
       ) : (
         <View style={styles.noScansContainer}>
@@ -125,12 +150,6 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginLeft: 40,
   },
-  box: {
-    width: "100%",
-    height: 200,
-    backgroundColor: "#ccc",
-    marginBottom: 20,
-  },
   noScansContainer: {
     width: 311,
     height: 219,
@@ -179,16 +198,63 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 20, // space above the section
+    // marginBottom: 10, // space below the title before the box
+  },
+
   sectionTitle: {
     fontFamily: "DM Sans",
     fontWeight: "600",
-    fontSize: 18,
-    lineHeight: 19, // 120% of font size
+    fontSize: 16,
+    lineHeight: 19,
     letterSpacing: 0.01,
     color: "#000000",
-    textAlign: "left",
-    width: "100%", // spans full container width
-    marginBottom: 10, // spacing below title
-    // marginTop: 20, // spacing above title if needed
+    marginBottom: 8,
+  },
+
+  seeAllText: {
+    fontFamily: "DM Sans",
+    fontWeight: "400",
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: 0.01,
+    color: "rgba(0, 0, 0, 0.5)",
+    textAlign: "right",
+  },
+
+  bottomButtonContainer: {
+    width: "100%",
+    alignItems: "flex-end", // right align
+    marginTop: 20,
+    marginBottom: 40, // space from bottom of ScrollView
+  },
+
+  bottomButton: {
+    backgroundColor: "#1773B0",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+
+  bottomButtonText: {
+    fontFamily: "DM Sans",
+    fontWeight: "500",
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
+
+  box: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#ccc",
+    borderRadius: 12,
+    marginBottom: 30, // space between boxes
   },
 });

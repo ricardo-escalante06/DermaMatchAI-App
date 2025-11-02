@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -9,19 +9,62 @@ import {
   View,
 } from "react-native";
 import GradientBoxContainer from "../components/GradientBoxContainer";
+import TeaserRecommendedRoutine from "../components/TeaserRecommendedRoutine";
 
 export default function HomePageScreen({ navigation }) {
   const [hasScans, setHasScans] = useState(true);
 
+  const [name, setName] = useState("Jennifer");
   const [numberDays, setNumberDays] = useState(1);
+  const [items, setItems] = useState([]);
 
-  const name = "Jennifer";
   const screenHeight = Dimensions.get("window").height;
 
   function handleStartFaceScan() {
     console.log("Start Face Scan button pressed");
     // navigation.navigate("Face Scan");
   }
+
+  useEffect(() => {
+    // fetching items
+    setItems([
+      {
+        image: "url",
+        name: "Seoul Wonder Releaf Centella Toner",
+        store: "ROUND LAB",
+        type: "CLEANSER",
+        price: 19.2,
+      },
+      {
+        image: "url",
+        name: "1025 Dokdo Cleanser",
+        store: "ROUND LAB",
+        type: "SERUM",
+        price: 19.2,
+      },
+      {
+        image: "url",
+        name: "1025 Dokdo Cleanser",
+        store: "ROUND LAB",
+        type: "SUNSCREEN",
+        price: 19.2,
+      },
+      {
+        image: "url",
+        name: "1025 Dokdo Cleanser",
+        store: "ROUND LAB",
+        type: "MOISTURIZER",
+        price: 19.2,
+      },
+      {
+        image: "url",
+        name: "1025 Dokdo Cleanser",
+        store: "ROUND LAB",
+        type: "TONER",
+        price: 19.2,
+      },
+    ]);
+  }, []);
 
   return (
     <ScrollView
@@ -72,7 +115,8 @@ export default function HomePageScreen({ navigation }) {
               <Text style={styles.seeAllText}>See all</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.box} />
+
+          <TeaserRecommendedRoutine items={items} />
 
           {/* Bottom right button */}
           <View style={styles.bottomButtonContainer}>
@@ -205,6 +249,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 20, // space above the section
     // marginBottom: 10, // space below the title before the box
+    marginBottom: 8,
   },
 
   sectionTitle: {

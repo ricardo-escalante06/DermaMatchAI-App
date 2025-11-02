@@ -8,9 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import GradientBoxContainer from "../components/GradientBoxContainer";
 
 export default function HomePageScreen({ navigation }) {
-  const [hasScans, setHasScans] = useState(false);
+  const [hasScans, setHasScans] = useState(true);
+
+  const [numberDays, setNumberDays] = useState(1);
+
   const name = "Jennifer";
   const screenHeight = Dimensions.get("window").height;
 
@@ -28,7 +32,13 @@ export default function HomePageScreen({ navigation }) {
       {/* Heading Section */}
       <View style={styles.headingContainer}>
         <View style={styles.textContainer}>
-          <Text style={styles.welcomeText}>Welcome,</Text>
+          {hasScans ? (
+            <>
+              <Text style={styles.welcomeText}>Good Morning,</Text>
+            </>
+          ) : (
+            <Text style={styles.welcomeText}>Welcome,</Text>
+          )}
           <Text style={styles.nameText}>{name}</Text>
         </View>
         <Image
@@ -39,7 +49,8 @@ export default function HomePageScreen({ navigation }) {
 
       {hasScans ? (
         <>
-          <View style={styles.box} />
+          <Text style={styles.sectionTitle}>Your Progress</Text>
+          <GradientBoxContainer number={numberDays} />
           <View style={styles.box} />
           <View style={styles.box} />
           <View style={styles.box} />
@@ -53,8 +64,11 @@ export default function HomePageScreen({ navigation }) {
           <Text style={styles.noScansText}>
             You have no results or progress
           </Text>
-          <TouchableOpacity style={styles.scanButton} onPress={handleStartFaceScan}>
-            <Text style={styles.scanButtonText}>Start Face Scan</Text>
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={handleStartFaceScan}
+          >
+            <Text style={styles.scanButtonText}>Take your first scan</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -77,11 +91,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: 30,
-    marginBottom: 30,
+    marginBottom: 20,
     width: "100%",
   },
   textContainer: {
     flex: 1,
+    marginTop: 40,
   },
   welcomeText: {
     width: 144,
@@ -162,5 +177,18 @@ const styles = StyleSheet.create({
     letterSpacing: -0.01,
     color: "#FFFFFF",
     textAlign: "center",
+  },
+
+  sectionTitle: {
+    fontFamily: "DM Sans",
+    fontWeight: "600",
+    fontSize: 18,
+    lineHeight: 19, // 120% of font size
+    letterSpacing: 0.01,
+    color: "#000000",
+    textAlign: "left",
+    width: "100%", // spans full container width
+    marginBottom: 10, // spacing below title
+    // marginTop: 20, // spacing above title if needed
   },
 });

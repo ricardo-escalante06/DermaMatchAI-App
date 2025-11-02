@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import FaceScanObject from "../components/FaceScanObject";
 import GradientBoxContainer from "../components/GradientBoxContainer";
 import TeaserRecommendedRoutine from "../components/TeaserRecommendedRoutine";
 
@@ -17,6 +18,15 @@ export default function HomePageScreen({ navigation }) {
   const [name, setName] = useState("Jennifer");
   const [numberDays, setNumberDays] = useState(1);
   const [items, setItems] = useState([]);
+
+  const [image, setImage] = useState("");
+  const [scanDate, setScanDate] = useState("08/20/2025");
+  const [skinType, setSkinType] = useState("Dry, Oily");
+  const [products, setProducts] = useState([
+    "Item Name",
+    " Item Name",
+    "Item...",
+  ]);
 
   const screenHeight = Dimensions.get("window").height;
 
@@ -103,7 +113,31 @@ export default function HomePageScreen({ navigation }) {
               <Text style={styles.seeAllText}>See all</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.box} />
+
+          <View style={{ width: "100%", alignItems: "center", marginBottom: 20 }}>
+            {/* Back layers */}
+            <View style={[styles.layer1]} />
+            <View style={[styles.layer2]} />
+
+            {/* Main FaceScanObject on top */}
+            <FaceScanObject
+              style={{ zIndex: 3 }}
+              image={require("../assets/images/dermaTestScan.png")}
+              scanDate={scanDate}
+              skinType={skinType}
+              products={products.join(", ")}
+              onPress={() => console.log("View More")}
+            />
+          </View>
+
+          {/* <FaceScanObject
+            // image={image}
+            image={require("../assets/images/dermaTestScan.png")}
+            scanDate={scanDate}
+            skinType={skinType}
+            products={products}
+            onPress={() => console.log("idk")}
+          /> */}
 
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { maxWidth: 227 }]}>
@@ -301,5 +335,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#ccc",
     borderRadius: 12,
     marginBottom: 30, // space between boxes
+  },
+
+  layer1: {
+    position: "absolute",
+    width: 300,
+    height: 208,
+    backgroundColor: "#E3EDF4",
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    top: 20,
+    zIndex: 2,
+  },
+  layer2: {
+    position: "absolute",
+    width: 270,
+    height: 186,
+    backgroundColor: "#CDD5D9",
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    top: 50, // slight offset to create layering
+    zIndex: 1,
   },
 });

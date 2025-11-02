@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   arrowContainer: {
     position: "absolute",
-    top: 60,
+    top: 80,
     left: 40,
     zIndex: 10,
   },

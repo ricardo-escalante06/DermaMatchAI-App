@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import FaceScanScreen from "./screens/FaceScanScreen";
 import HomeScreen from "./screens/HomeScreen";
 import LoginScreen from "./screens/LoginScreen";
+import PastScansScreen from "./screens/PastScansScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 
 import myTabs from "./navigation/myTabs";
@@ -35,6 +36,12 @@ export default function App() {
         <Stack.Screen
           name="Face Scan"
           component={FaceScanScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Past Scans"
+          component={PastScansScreen}
           options={{ headerShown: false }}
         />
 

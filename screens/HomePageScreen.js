@@ -126,7 +126,7 @@ export default function HomePageScreen({ navigation }) {
               scanDate={scanDate}
               skinType={skinType}
               products={products.join(", ")}
-              onPress={() => console.log("View More")}
+              onPress={() => navigation.navigate("Past Scans")}
             />
           </View>
 
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "flex-end", // right align
     marginTop: 20,
-    marginBottom: 40, // space from bottom of ScrollView
+    marginBottom: 90, // space from bottom of ScrollView
   },
 
   bottomButton: {

@@ -36,24 +36,6 @@ export default function FaceScanScreen({ navigation }) {
     setFacing((current) => (current === "back" ? "front" : "back"));
   }
 
-  // async function takePhoto() {
-  //   if (!cameraRef.current) return;
-
-  //   try {
-  //     const photo = await cameraRef.current.takePictureAsync({
-  //       base64: true,
-  //       exif: true,
-  //     });
-
-  //     setCapturedPhotoUri(photo.uri);
-  //     navigation.navigate("MainTabs");
-
-  //   } catch (error) {
-  //     console.error("Error taking picture:", error);
-  //   }
-
-  // }
-
   async function takePhoto() {
     if (!cameraRef.current) return;
 
@@ -72,16 +54,16 @@ export default function FaceScanScreen({ navigation }) {
         type: "image/jpeg",
       });
 
-      const response = await fetch("https://dermamatch-mvp-1.onrender.com/recommend-image", {
-        method: "POST",
-        body: formData,
-      });
+      // const response = await fetch("https://dermamatch-mvp-1.onrender.com/recommend-image", {
+      //   method: "POST",
+      //   body: formData,
+      // });
 
-      const data = await response.json();
-      console.log("Upload response:", data);
+      // const data = await response.json();
+      // console.log("Upload response:", data);
 
       // sents you to main tabs!
-      navigation.navigate("MainTabs");
+      navigation.replace("MainTabs");
     } catch (error) {
       console.error("Error taking/uploading picture:", error);
     }
@@ -89,6 +71,15 @@ export default function FaceScanScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => navigation.replace("MainTabs")}
+        style={styles.arrowContainer}
+      >
+        <Image
+          source={require("../assets/images/arrow.png")}
+          style={styles.arrow}
+        />
+      </TouchableOpacity>
       {!capturedPhotoUri ? (
         <>
           <CameraView
@@ -305,5 +296,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.01,
     color: "#000000ff",
+  },
+  arrowContainer: {
+    position: "absolute",
+    top: 60,
+    left: 40,
+    zIndex: 10,
+  },
+
+  arrow: {
+    width: 20,
+    height: 20,
+    resizeMode: "contain",
   },
 });

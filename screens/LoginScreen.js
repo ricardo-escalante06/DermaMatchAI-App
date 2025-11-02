@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import AccountSignInOptions from "../components/accountSignInOptions";
-import { loginUser } from "../supabase/auth";
+import { addNewUser, loginUser } from "../supabase/auth";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -22,8 +22,17 @@ export default function LoginScreen({ navigation }) {
     if (error) {
       alert(error.message);
     } else {
+      await addUser();
       alert("Login Successful!");
       navigation.navigate("Face Scan");
+    }
+  }
+
+  async function addUser() {
+    try {
+      await addNewUser();
+    } catch (err) {
+      console.error("Failed to add user:", err);
     }
   }
 

@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import CameraPageScreen from "../screens/CameraPageScreenTEMP";
+import CameraPageScreen from "../screens/FaceScanScreen";
 import HomePageScreen from "../screens/HomePageScreen";
 import ProfilePageScreen from "../screens/ProfilePageScreen";
 import ShoppingPageScreen from "../screens/ShoppingPageScreen";
@@ -35,6 +35,9 @@ export default function MyTabs() {
 }
 
 function CustomTabBar({ state, descriptors, navigation }) {
+  const routeName = state.routes[state.index].name;
+  if (routeName === "CameraPageScreen") return null;
+
   const icons = {
     HomePageScreen: {
       filled: homepageiconFilled,
@@ -58,7 +61,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
     <View style={styles.tabBarContainer}>
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
-        const iconSource = isFocused ? icons[route.name].filled : icons[route.name].outline;
+        const iconSource = isFocused
+          ? icons[route.name].filled
+          : icons[route.name].outline;
 
         return (
           <TouchableOpacity

@@ -1,19 +1,19 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import FaceScanScreen from './screens/FaceScanScreen';
+import FaceScanScreen from "./screens/FaceScanScreen";
 import HomeScreen from "./screens/HomeScreen";
 import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 
-import myTabs from './navigation/myTabs';
+import myTabs from "./navigation/myTabs";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator initialRouteName="MainTabs">
         <Stack.Screen
           name="Home"
           component={HomeScreen}

@@ -30,13 +30,17 @@ export default function SignUpScreen({ navigation }) {
 
     const { data, error } = await signUpUser(name, email, password);
 
+    console.log(data, error);
     if (error) {
       alert(error.message);
     } else {
+      // await addNewUser();
       alert("Signup successful! Check your email.");
       navigation.navigate("Login");
     }
   }
+
+
   return (
     <View style={styles.main}>
       <ImageBackground
@@ -202,8 +206,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 12,
     backgroundColor: "#fff",
-    width: "100%", 
-    maxWidth: 320, 
+    width: "100%",
+    maxWidth: 320,
     height: 48,
     marginVertical: 10,
   },

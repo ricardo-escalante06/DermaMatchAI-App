@@ -16,6 +16,7 @@ export default function TeaserRecommendedRoutine({ items = [] }) {
           type={item.type}
           price={item.price}
           image={item.imageUrl}
+          style={styles.test}
         />
       ))}
     </ScrollView>
@@ -27,4 +28,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     alignItems: "flex-start",
   },
+  test: { width: 187, marginRight: 12 },
 });

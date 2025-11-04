@@ -32,7 +32,7 @@ export default function HomePageScreen({ navigation, route }) {
   const screenHeight = Dimensions.get("window").height;
 
   function handleStartFaceScan() {
-    console.log("Start Face Scan button pressed");
+    // console.log("Start Face Scan button pressed");
     navigation.navigate("CameraPageScreen");
   }
 
@@ -153,7 +153,9 @@ export default function HomePageScreen({ navigation, route }) {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your Past Scans</Text>
             <TouchableOpacity
-              onPress={() => console.log("See all Past Scans pressed")}
+              onPress={() =>
+                navigation.navigate("Past Scans", { scans: scans })
+              }
             >
               <Text style={styles.seeAllText}>See all</Text>
             </TouchableOpacity>
@@ -195,7 +197,14 @@ export default function HomePageScreen({ navigation, route }) {
             <TouchableOpacity
               onPress={() => console.log("See all Skincare Routine pressed")}
             >
-              <Text style={styles.seeAllText}>See all</Text>
+              <Text
+                style={styles.seeAllText}
+                onPress={() =>
+                  navigation.navigate("Full Routine", { items: items })
+                }
+              >
+                See all
+              </Text>
             </TouchableOpacity>
           </View>
 

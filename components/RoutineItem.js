@@ -1,11 +1,11 @@
 // TeaserRoutineItem.js
 import { Image, StyleSheet, Text, View } from "react-native";
 
-export default function RoutineItem({ image, name, store, type, price }) {
+export default function RoutineItem({ image, name, store, type, price, style }) {
   const badgeStyles = getBadgeStyles(type);
 
   return (
-    <View style={styles.itemBox}>
+    <View style={[styles.itemBox, style]}>
       {/* Spacer for top */}
       <View style={{ flex: 1 }} />
 
@@ -22,7 +22,9 @@ export default function RoutineItem({ image, name, store, type, price }) {
 
       {/* Bottom Info Section */}
       <View style={styles.infoContainer}>
-        <Text style={styles.itemName} numberOfLines={2} ellipsizeMode="tail">{name}</Text>
+        <Text style={styles.itemName} numberOfLines={2} ellipsizeMode="tail">
+          {name}
+        </Text>
         <Text style={styles.itemStore}>{store}</Text>
 
         {/* Badge aligned to the right */}
@@ -73,16 +75,18 @@ function getBadgeStyles(type) {
 
 const styles = StyleSheet.create({
   itemBox: {
-    width: 187,
+    // width: 187,
+
     height: 323,
-    marginRight: 12,
+    // marginRight: 12,
     borderRadius: 20,
     backgroundColor: "#F5F5F5",
     justifyContent: "flex-start",
     alignItems: "center",
   },
   imageBox: {
-    width: 144,
+    // width: 144,
+    width: "80%",
     height: 144,
     marginBottom: 20,
     borderRadius: 12,

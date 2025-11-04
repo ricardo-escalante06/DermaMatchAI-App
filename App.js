@@ -8,6 +8,7 @@ import LoginScreen from "./screens/LoginScreen";
 import PastScansScreen from "./screens/PastScansScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 
+import FullRoutine from "./screens/FullRoutine";
 import ViewScanScreen from "./screens/ViewScanScreen";
 
 
@@ -52,6 +53,12 @@ export default function App() {
         <Stack.Screen
           name="View Scan"
           component={ViewScanScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Full Routine"
+          component={FullRoutine}
           options={{ headerShown: false }}
         />
 

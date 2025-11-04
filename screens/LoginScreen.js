@@ -2,6 +2,9 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import {
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -23,7 +26,6 @@ export default function LoginScreen({ navigation }) {
       alert(error.message);
     } else {
       await addUser();
-      // alert("Login Successful!");
       navigation.navigate("Face Scan");
     }
   }
@@ -37,86 +39,96 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.main}>
-      <ImageBackground
-        source={require("../assets/images/headerBackground.png")}
-        style={styles.headerContainer}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image
-            source={require("../assets/images/arrow.png")}
-            style={styles.arrow}
-          />
-        </TouchableOpacity>
-      </ImageBackground>
-
-      <AccountSignInOptions headerText={"Welcome Back!"} />
-
-      <View style={styles.container}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            key={passwordVisible ? "visible" : "hidden"}
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!passwordVisible}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity
-            onPress={() => setPasswordVisible(!passwordVisible)}
+        <View style={styles.main}>
+          <ImageBackground
+            source={require("../assets/images/headerBackground.png")}
+            style={styles.headerContainer}
           >
-            <Image
-              source={require("../assets/images/passwordEye.png")}
-              style={styles.inputIcon}
-            />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Image
+                source={require("../assets/images/arrow.png")}
+                style={styles.arrow}
+              />
+            </TouchableOpacity>
+          </ImageBackground>
 
-        <View style={{ width: "100%", maxWidth: 295 }}>
-          <TouchableOpacity style={{ alignSelf: "flex-end" }}>
-            <Text style={styles.forgotPassword}>Forgot Password</Text>
-          </TouchableOpacity>
-        </View>
+          <AccountSignInOptions headerText={"Welcome Back!"} />
 
-        <TouchableOpacity
-          style={[
-            styles.signUpbutton,
-            (!email || !password) && {
-              backgroundColor: "#ccc",
-            },
-          ]}
-          onPress={() => submit(email, password)}
-          disabled={!email || !password}
-        >
-          <Text style={styles.signUpbuttonText}>LOGIN</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <View style={styles.container}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                key={passwordVisible ? "visible" : "hidden"}
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!passwordVisible}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                onPress={() => setPasswordVisible(!passwordVisible)}
+              >
+                <Image
+                  source={require("../assets/images/passwordEye.png")}
+                  style={styles.inputIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ width: "100%", maxWidth: 295 }}>
+              <TouchableOpacity style={{ alignSelf: "flex-end" }}>
+                <Text style={styles.forgotPassword}>Forgot Password</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.signUpbutton,
+                (!email || !password) && { backgroundColor: "#ccc" },
+              ]}
+              onPress={() => submit(email, password)}
+              disabled={!email || !password}
+            >
+              <Text style={styles.signUpbuttonText}>LOGIN</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: "#fff",
+  },
   main: {
     backgroundColor: "#ffffff",
     width: "100%",
-    height: "100%",
     padding: 0,
   },
-
   container: {
     flex: 1,
     justifyContent: "flex-start",
@@ -124,14 +136,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     paddingHorizontal: 55,
   },
-
   headerContainer: {
     width: "100%",
     height: 190,
     justifyContent: "center",
     alignItems: "flex-start",
   },
-
   arrow: {
     width: 20,
     height: 20,
@@ -139,7 +149,6 @@ const styles = StyleSheet.create({
     marginLeft: 30,
     marginTop: -10,
   },
-
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -152,19 +161,16 @@ const styles = StyleSheet.create({
     height: 48,
     marginVertical: 10,
   },
-
   input: {
-    flex: 1, // takes remaining space
+    flex: 1,
     fontSize: 16,
     color: "#000",
   },
-
   inputIcon: {
     width: 26,
     height: 20,
     tintColor: "#2D3648",
   },
-
   signUpbutton: {
     flexDirection: "row",
     justifyContent: "center",
@@ -178,7 +184,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 75,
   },
-
   signUpbuttonText: {
     fontFamily: "DM Sans",
     fontStyle: "normal",
@@ -189,7 +194,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.01,
     color: "#FFFFFF",
   },
-
   forgotPassword: {
     fontFamily: "DM Sans",
     fontStyle: "normal",
@@ -199,7 +203,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.01,
     textDecorationLine: "underline",
     color: "#2D3648",
-    // Align right
     alignSelf: "flex-end",
   },
 });

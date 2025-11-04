@@ -2,6 +2,9 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import {
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -30,151 +33,156 @@ export default function SignUpScreen({ navigation }) {
 
     const { data, error } = await signUpUser(name, email, password);
 
-    console.log(data, error);
     if (error) {
       alert(error.message);
     } else {
-      // await addNewUser();
       alert("Signup successful! Check your email.");
       navigation.navigate("Login");
     }
   }
 
-
   return (
-    <View style={styles.main}>
-      <ImageBackground
-        source={require("../assets/images/headerBackground.png")}
-        style={styles.headerContainer}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image
-            source={require("../assets/images/arrow.png")}
-            style={styles.arrow}
-          />
-        </TouchableOpacity>
-      </ImageBackground>
-
-      <AccountSignInOptions headerText={"Create Your Skin Profile"} />
-
-      <View style={styles.container}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Name"
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            key={passwordVisible ? "visible" : "hidden"}
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!passwordVisible}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity
-            onPress={() => setPasswordVisible(!passwordVisible)}
+        <View style={styles.main}>
+          <ImageBackground
+            source={require("../assets/images/headerBackground.png")}
+            style={styles.headerContainer}
           >
-            <Image
-              source={require("../assets/images/passwordEye.png")}
-              style={styles.inputIcon}
-            />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Image
+                source={require("../assets/images/arrow.png")}
+                style={styles.arrow}
+              />
+            </TouchableOpacity>
+          </ImageBackground>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            key={passwordVisible ? "visible" : "hidden"}
-            style={styles.input}
-            placeholder="Confirm Password"
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!passwordVisible2}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity
-            onPress={() => setPasswordVisible2(!passwordVisible2)}
-          >
-            <Image
-              source={require("../assets/images/passwordEye.png")}
-              style={styles.inputIcon}
-            />
-          </TouchableOpacity>
-        </View>
+          <AccountSignInOptions headerText={"Create Your Skin Profile"} />
 
-        <TouchableOpacity
-          style={styles.radioContainer}
-          onPress={() => setAcceptedTerms(!acceptedTerms)}
-        >
-          {/* Inner circle */}
-          <View style={styles.circle}>
-            {acceptedTerms && <View style={styles.circleDot} />}
-          </View>
+          <View style={styles.container}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="none"
+              />
+            </View>
 
-          {/* Text */}
-          <Text style={styles.radioLabel}>
-            I accept the{" "}
-            <Text
-              style={{ textDecorationLine: "underline" }}
-              onPress={() => alert("TOS!")}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                key={passwordVisible ? "visible" : "hidden"}
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!passwordVisible}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                onPress={() => setPasswordVisible(!passwordVisible)}
+              >
+                <Image
+                  source={require("../assets/images/passwordEye.png")}
+                  style={styles.inputIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                key={passwordVisible2 ? "visible" : "hidden"}
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!passwordVisible2}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                onPress={() => setPasswordVisible2(!passwordVisible2)}
+              >
+                <Image
+                  source={require("../assets/images/passwordEye.png")}
+                  style={styles.inputIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.radioContainer}
+              onPress={() => setAcceptedTerms(!acceptedTerms)}
             >
-              Terms and Conditions
-            </Text>
-          </Text>
-        </TouchableOpacity>
+              <View style={styles.circle}>
+                {acceptedTerms && <View style={styles.circleDot} />}
+              </View>
 
-        <TouchableOpacity
-          style={[
-            styles.signUpbutton,
-            (!name ||
-              !email ||
-              !password ||
-              !acceptedTerms ||
-              !confirmPassword) && {
-              backgroundColor: "#ccc",
-            },
-          ]}
-          onPress={() => submit(name, email, password, confirmPassword)}
-          disabled={
-            !name || !email || !password || !acceptedTerms || !confirmPassword
-          }
-        >
-          <Text style={styles.signUpbuttonText}>SIGN UP</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+              <Text style={styles.radioLabel}>
+                I accept the{" "}
+                <Text
+                  style={{ textDecorationLine: "underline" }}
+                  onPress={() => alert("TOS!")}
+                >
+                  Terms and Conditions
+                </Text>
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.signUpbutton,
+                (!name ||
+                  !email ||
+                  !password ||
+                  !acceptedTerms ||
+                  !confirmPassword) && { backgroundColor: "#ccc" },
+              ]}
+              onPress={() => submit(name, email, password, confirmPassword)}
+              disabled={
+                !name || !email || !password || !acceptedTerms || !confirmPassword
+              }
+            >
+              <Text style={styles.signUpbuttonText}>SIGN UP</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: "#fff",
+  },
   main: {
     backgroundColor: "#ffffff",
     width: "100%",
-    height: "100%",
     padding: 0,
   },
-
   container: {
     flex: 1,
     justifyContent: "flex-start",
@@ -182,14 +190,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     paddingHorizontal: 55,
   },
-
   headerContainer: {
     width: "100%",
     height: 190,
     justifyContent: "center",
     alignItems: "flex-start",
   },
-
   arrow: {
     width: 20,
     height: 20,
@@ -197,7 +203,6 @@ const styles = StyleSheet.create({
     marginLeft: 30,
     marginTop: -10,
   },
-
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -211,50 +216,43 @@ const styles = StyleSheet.create({
     height: 48,
     marginVertical: 10,
   },
-
   input: {
-    flex: 1, // takes remaining space
+    flex: 1,
     fontSize: 16,
     color: "#000",
   },
-
   inputIcon: {
     width: 26,
     height: 20,
     tintColor: "#2D3648",
   },
-
   radioContainer: {
-    flexDirection: "row", // keeps circle and text horizontal
+    flexDirection: "row",
     alignItems: "center",
-    marginVertical: 15, // space above/below
-    width: 295, // same as TextInput width
-    alignSelf: "flex-start", // aligns it to the left of the container
+    marginVertical: 15,
+    width: 295,
+    alignSelf: "flex-start",
   },
-
   circle: {
     width: 15,
     height: 15,
     borderWidth: 1,
     borderColor: "#2D3648",
-    borderRadius: 15 / 2, // makes it a circle
+    borderRadius: 7.5,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10, // space between circle and text
+    marginRight: 10,
   },
-
   circleDot: {
     width: 9,
     height: 9,
     backgroundColor: "#2D3648",
-    borderRadius: 9 / 2, // smaller inner circle
+    borderRadius: 4.5,
   },
-
   radioLabel: {
     fontSize: 14,
     color: "#2D3648",
   },
-
   signUpbutton: {
     flexDirection: "row",
     justifyContent: "center",
@@ -268,7 +266,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 5,
   },
-
   signUpbuttonText: {
     fontFamily: "DM Sans",
     fontStyle: "normal",

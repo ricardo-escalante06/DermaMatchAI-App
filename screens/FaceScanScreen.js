@@ -305,7 +305,7 @@ export default function FaceScanScreen({ navigation }) {
           <View style={styles.buttonContainer}>
             {!startClicked && (
               <TouchableOpacity style={styles.button} onPress={takePhoto}>
-                <Text style={styles.text}>Click to start</Text>
+                <Text style={styles.text}>Click HERE to start</Text>
               </TouchableOpacity>
             )}
           </View>

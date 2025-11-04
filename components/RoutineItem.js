@@ -22,7 +22,7 @@ export default function RoutineItem({ image, name, store, type, price }) {
 
       {/* Bottom Info Section */}
       <View style={styles.infoContainer}>
-        <Text style={styles.itemName}>{name}</Text>
+        <Text style={styles.itemName} numberOfLines={2} ellipsizeMode="tail">{name}</Text>
         <Text style={styles.itemStore}>{store}</Text>
 
         {/* Badge aligned to the right */}

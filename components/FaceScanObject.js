@@ -1,14 +1,16 @@
-
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function FaceScanObject({
   image,
   scanDate,
-  skinType,
+  // skinType,
   products,
   onPress,
   style,
 }) {
+  const formattedDate = scanDate
+    ? new Date(scanDate).toLocaleDateString("en-US")
+    : "";
   return (
     <View style={[styles.container, style]}>
       {/* Left Image */}
@@ -19,17 +21,17 @@ export default function FaceScanObject({
         {/* Date */}
         <Text style={styles.textLine}>
           <Text style={styles.normal}>Scan on </Text>
-          <Text style={[styles.bold, {fontSize: 12}]}>{scanDate}</Text>
+          <Text style={[styles.bold, { fontSize: 13 }]}>{formattedDate}</Text>
         </Text>
 
-        {/* Skin Type */}
+        {/* Skin Type
         <Text style={styles.textLine}>
           <Text style={styles.bold}>Skin type: </Text>
           <Text style={styles.normal}>{skinType}</Text>
-        </Text>
+        </Text> */}
 
         {/* Products */}
-        <Text style={styles.textLine}>
+        <Text style={styles.textLine} numberOfLines={3} ellipsizeMode="tail">
           <Text style={styles.bold}>Skin Care Products: </Text>
           <Text style={styles.normal}>{products}</Text>
         </Text>

@@ -15,6 +15,7 @@ export default function TeaserRecommendedRoutine({ items = [] }) {
           store={item.store}
           type={item.type}
           price={item.price}
+          image={item.imageUrl}
         />
       ))}
     </ScrollView>

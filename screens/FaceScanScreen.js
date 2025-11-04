@@ -2,7 +2,7 @@ import { decode as atob } from "base-64";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
 import { Image } from "expo-image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Modal,
@@ -44,6 +44,15 @@ export default function FaceScanScreen({ navigation }) {
   const [userId, setUserId] = useState(null);
 
   const duration = 4000;
+
+  useEffect(() => {
+  async function loadUserId() {
+    const id = await fetchUserId();
+    if (id) setUserId(id);
+  }
+
+  loadUserId();
+}, []);
 
   async function uploadPhoto(user_id) {
     // Read file as base64
@@ -214,8 +223,8 @@ export default function FaceScanScreen({ navigation }) {
       setScanResult(imageUrl);
 
       saveScanToDatabase(userId, imageUrl, data);
-
-      navigation.replace("MainTabs");
+      
+      navigation.replace("MainTabs", { userId: userId });
     } catch (err) {
       console.error("Failed to save scan2:", err);
       alert("Failed to save scan: " + err.message);
@@ -243,7 +252,7 @@ export default function FaceScanScreen({ navigation }) {
     <View style={styles.container}>
       {!photoTaken && (
         <TouchableOpacity
-          onPress={() => navigation.replace("MainTabs")}
+          onPress={() => navigation.replace("MainTabs", { userId: userId })}
           style={styles.arrowContainer}
         >
           <Image

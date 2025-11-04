@@ -12,11 +12,18 @@ import FaceScanObject from "../components/FaceScanObject";
 import GradientBoxContainer from "../components/GradientBoxContainer";
 import TeaserRecommendedRoutine from "../components/TeaserRecommendedRoutine";
 
-export default function HomePageScreen({ navigation }) {
+import { supabase } from "../supabase/supabaseClient";
+
+export default function HomePageScreen({ navigation, route }) {
+  const [userId, setUserId] = useState(null);
+
   const [hasScans, setHasScans] = useState(false);
+  const [scanCount, setScanCount] = useState(null);
+
+  const [mostRecentScan, setMostRecentScan] = useState(null);
 
   const [name, setName] = useState("Jennifer");
-  const [numberDays, setNumberDays] = useState(1);
+  const [numberDays, setNumberDays] = useState(0);
   const [items, setItems] = useState([]);
 
   const [image, setImage] = useState("");
@@ -36,45 +43,66 @@ export default function HomePageScreen({ navigation }) {
   }
 
   useEffect(() => {
-    // fetching items
-    setItems([
-      {
-        image: "url",
-        name: "Seoul Wonder Releaf Centella Toner",
-        store: "ROUND LAB",
-        type: "CLEANSER",
-        price: 19.2,
-      },
-      {
-        image: "url",
-        name: "1025 Dokdo Cleanser",
-        store: "ROUND LAB",
-        type: "SERUM",
-        price: 19.2,
-      },
-      {
-        image: "url",
-        name: "1025 Dokdo Cleanser",
-        store: "ROUND LAB",
-        type: "SUNSCREEN",
-        price: 19.2,
-      },
-      {
-        image: "url",
-        name: "1025 Dokdo Cleanser",
-        store: "ROUND LAB",
-        type: "MOISTURIZER",
-        price: 19.2,
-      },
-      {
-        image: "url",
-        name: "1025 Dokdo Cleanser",
-        store: "ROUND LAB",
-        type: "TONER",
-        price: 19.2,
-      },
-    ]);
+    async function fetchUserId() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.id) {
+        setUserId(sessionData.session.user.id);
+      }
+    }
+    fetchUserId();
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    async function fetchScans() {
+      try {
+        // console.log(userId);
+
+        const scans = await getUserScans(userId); // fetch scans for the user
+        const count = scans.length;
+        setScanCount(count);
+
+        if (count > 0) {
+          setHasScans(true);
+          // Get the most recent scan
+          const recent = scans[0];
+          setMostRecentScan(recent);
+
+          // Derive items from scan products
+          setItems(recent.products || []);
+
+          const imageUrl = recent.scan_image_url;
+          setImage(imageUrl);
+
+          // Calculate number of days since scan
+          const scanDate = new Date(recent.created_at);
+          const today = new Date();
+          const diffTime = today - scanDate; // in ms
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          setNumberDays(diffDays);
+        } else {
+          setHasScans(false);
+        }
+      } catch (err) {
+        console.error("Error fetching scans:", err);
+        setHasScans(false);
+      }
+    }
+
+    fetchScans();
+  }, [userId]);
+
+  async function getUserScans(userId) {
+    const { data, error } = await supabase
+      .from("scans")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
+  }
 
   return (
     <ScrollView
@@ -124,10 +152,10 @@ export default function HomePageScreen({ navigation }) {
             {/* Main FaceScanObject on top */}
             <FaceScanObject
               style={{ zIndex: 3 }}
-              image={require("../assets/images/dermaTestScan.png")}
-              scanDate={scanDate}
-              skinType={skinType}
-              products={products.join(", ")}
+              image={{ uri: image }}
+              scanDate={mostRecentScan?.created_at || ""}
+              // skinType={mostRecentScan?.skin_type || "Unknown"}
+              products={(items || []).map((p) => p.name).join(", ")}
               onPress={() => navigation.navigate("Past Scans")}
             />
           </View>

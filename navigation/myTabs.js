@@ -30,6 +30,7 @@ export default function MyTabs(route) {
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
+      initialRouteName="ShoppingPageScreen"
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen

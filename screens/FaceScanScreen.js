@@ -348,7 +348,7 @@ export default function FaceScanScreen({ navigation }) {
 
               <Pressable
                 style={styles.modalButtonNo}
-                onPress={() => console.log("No pressed")}
+                onPress={() => navigation.replace("MainTabs", { userId: userId })}
               >
                 <Text style={styles.modalButtonNoText}>No</Text>
               </Pressable>

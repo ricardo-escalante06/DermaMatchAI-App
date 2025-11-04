@@ -23,7 +23,7 @@ export default function HomePageScreen({ navigation, route }) {
 
   const [mostRecentScan, setMostRecentScan] = useState(null);
 
-  const [name, setName] = useState("Jennifer");
+  const [name, setName] = useState("");
   const [numberDays, setNumberDays] = useState(0);
   const [items, setItems] = useState([]);
 
@@ -72,6 +72,7 @@ export default function HomePageScreen({ navigation, route }) {
           setImage(imageUrl);
 
           // get name from profiles table
+          await fetchUserData(userId);
 
           // Calculate number of days since scan
           const scanDate = new Date(recent.created_at);
@@ -90,6 +91,24 @@ export default function HomePageScreen({ navigation, route }) {
 
     fetchScans();
   }, [userId]);
+
+  async function fetchUserData(user_id) {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user_id)
+        .single();
+
+      if (profileError) throw profileError;
+      if (profileData?.name) {
+        const firstName = profileData.name.trim().split(" ")[0];
+        setName(firstName);
+      }
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+    }
+  }
 
   async function getUserScans(userId) {
     const { data, error } = await supabase
@@ -153,8 +172,10 @@ export default function HomePageScreen({ navigation, route }) {
               image={{ uri: image }}
               scanDate={mostRecentScan?.created_at || ""}
               // skinType={mostRecentScan?.skin_type || "Unknown"}
-              products={(items).map((p) => p.name).join(", ")}
-              onPress={() => navigation.navigate("Past Scans", { scans: scans})}
+              products={items.map((p) => p.name).join(", ")}
+              onPress={() =>
+                navigation.navigate("Past Scans", { scans: scans })
+              }
             />
           </View>
 

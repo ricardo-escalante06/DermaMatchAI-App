@@ -69,7 +69,9 @@ export default function PastScansScreen({ navigation, route }) {
                     ? scan.products.map((p) => p.name || p).join(", ")
                     : "No products"
                 }
-                onPress={() => console.log("View More", scan.id)}
+                onPress={() =>
+                  navigation.navigate("View Scan", { scan: scan })
+                }
               />
             </View>
           ))

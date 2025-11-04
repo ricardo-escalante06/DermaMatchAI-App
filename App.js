@@ -8,6 +8,8 @@ import LoginScreen from "./screens/LoginScreen";
 import PastScansScreen from "./screens/PastScansScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 
+import ViewScanScreen from "./screens/ViewScanScreen";
+
 
 import myTabs from "./navigation/myTabs";
 
@@ -44,6 +46,12 @@ export default function App() {
         <Stack.Screen
           name="Past Scans"
           component={PastScansScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="View Scan"
+          component={ViewScanScreen}
           options={{ headerShown: false }}
         />
 

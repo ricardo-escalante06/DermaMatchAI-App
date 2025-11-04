@@ -132,7 +132,7 @@ export default function HomePageScreen({ navigation, route }) {
         <View style={styles.textContainer}>
           {hasScans ? (
             <>
-              <Text style={styles.welcomeText}>Good Morning,</Text>
+              <Text style={styles.welcomeText}>Good Evening,</Text>
             </>
           ) : (
             <Text style={styles.welcomeText}>Welcome,</Text>

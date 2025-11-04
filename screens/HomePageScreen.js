@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -8,19 +8,117 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import FaceScanObject from "../components/FaceScanObject";
 import GradientBoxContainer from "../components/GradientBoxContainer";
+import TeaserRecommendedRoutine from "../components/TeaserRecommendedRoutine";
 
-export default function HomePageScreen({ navigation }) {
-  const [hasScans, setHasScans] = useState(true);
+import { supabase } from "../supabase/supabaseClient";
 
-  const [numberDays, setNumberDays] = useState(1);
+export default function HomePageScreen({ navigation, route }) {
+  const [userId, setUserId] = useState(null);
 
-  const name = "Jennifer";
+  const [scans, setScans] = useState([]);
+  const [hasScans, setHasScans] = useState(false);
+  const [scanCount, setScanCount] = useState(null);
+
+  const [mostRecentScan, setMostRecentScan] = useState(null);
+
+  const [name, setName] = useState("");
+  const [numberDays, setNumberDays] = useState(0);
+  const [items, setItems] = useState([]);
+
+  const [image, setImage] = useState("");
+
   const screenHeight = Dimensions.get("window").height;
 
   function handleStartFaceScan() {
-    console.log("Start Face Scan button pressed");
-    // navigation.navigate("Face Scan");
+    // console.log("Start Face Scan button pressed");
+    navigation.navigate("CameraPageScreen");
+  }
+
+  useEffect(() => {
+    async function fetchUserId() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.id) {
+        setUserId(sessionData.session.user.id);
+      }
+    }
+    fetchUserId();
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    async function fetchScans() {
+      try {
+        // console.log(userId);
+
+        const scans = await getUserScans(userId); // fetch scans for the user
+        setScans(scans);
+
+        const count = scans.length;
+        setScanCount(count);
+
+        if (count > 0) {
+          setHasScans(true);
+          // Get the most recent scan
+          const recent = scans[0];
+          setMostRecentScan(recent);
+
+          // Derive items from scan products
+          setItems(recent.products || []);
+
+          const imageUrl = recent.scan_image_url;
+          setImage(imageUrl);
+
+          // get name from profiles table
+          await fetchUserData(userId);
+
+          // Calculate number of days since scan
+          const scanDate = new Date(recent.created_at);
+          const today = new Date();
+          const diffTime = today - scanDate; // in ms
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          setNumberDays(diffDays);
+        } else {
+          setHasScans(false);
+        }
+      } catch (err) {
+        console.error("Error fetching scans:", err);
+        setHasScans(false);
+      }
+    }
+
+    fetchScans();
+  }, [userId]);
+
+  async function fetchUserData(user_id) {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user_id)
+        .single();
+
+      if (profileError) throw profileError;
+      if (profileData?.name) {
+        const firstName = profileData.name.trim().split(" ")[0];
+        setName(firstName);
+      }
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+    }
+  }
+
+  async function getUserScans(userId) {
+    const { data, error } = await supabase
+      .from("scans")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
   }
 
   return (
@@ -51,13 +149,76 @@ export default function HomePageScreen({ navigation }) {
         <>
           <Text style={styles.sectionTitle}>Your Progress</Text>
           <GradientBoxContainer number={numberDays} />
-          <View style={styles.box} />
-          <View style={styles.box} />
-          <View style={styles.box} />
 
-          <View style={styles.box} />
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Your Past Scans</Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("Past Scans", { scans: scans })
+              }
+            >
+              <Text style={styles.seeAllText}>See all</Text>
+            </TouchableOpacity>
+          </View>
 
-          <View style={styles.box} />
+          <View
+            style={{ width: "100%", alignItems: "center", marginBottom: 20 }}
+          >
+            {/* Back layers */}
+            <View style={[styles.layer1]} />
+            <View style={[styles.layer2]} />
+
+            {/* Main FaceScanObject on top */}
+            <FaceScanObject
+              style={{ zIndex: 3 }}
+              image={{ uri: image }}
+              scanDate={mostRecentScan?.created_at || ""}
+              // skinType={mostRecentScan?.skin_type || "Unknown"}
+              products={items.map((p) => p.name).join(", ")}
+              onPress={() =>
+                navigation.navigate("Past Scans", { scans: scans })
+              }
+            />
+          </View>
+
+          {/* <FaceScanObject
+            // image={image}
+            image={require("../assets/images/dermaTestScan.png")}
+            scanDate={scanDate}
+            skinType={skinType}
+            products={products}
+            onPress={() => console.log("idk")}
+          /> */}
+
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { maxWidth: 227 }]}>
+              Your Current Recommended Skincare Routine
+            </Text>
+            <TouchableOpacity
+              onPress={() => console.log("See all Skincare Routine pressed")}
+            >
+              <Text
+                style={styles.seeAllText}
+                onPress={() =>
+                  navigation.navigate("Full Routine", { items: items })
+                }
+              >
+                See all
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TeaserRecommendedRoutine items={items} />
+
+          {/* Bottom right button */}
+          <View style={styles.bottomButtonContainer}>
+            <TouchableOpacity
+              style={styles.bottomButton}
+              onPress={() => console.log("Subscribe pressed")}
+            >
+              <Text style={styles.bottomButtonText}>Subscribe to Routine</Text>
+            </TouchableOpacity>
+          </View>
         </>
       ) : (
         <View style={styles.noScansContainer}>
@@ -125,12 +286,6 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginLeft: 40,
   },
-  box: {
-    width: "100%",
-    height: 200,
-    backgroundColor: "#ccc",
-    marginBottom: 20,
-  },
   noScansContainer: {
     width: 311,
     height: 219,
@@ -179,16 +334,91 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 20, // space above the section
+    // marginBottom: 10, // space below the title before the box
+    marginBottom: 8,
+  },
+
   sectionTitle: {
     fontFamily: "DM Sans",
     fontWeight: "600",
-    fontSize: 18,
-    lineHeight: 19, // 120% of font size
+    fontSize: 16,
+    lineHeight: 19,
     letterSpacing: 0.01,
     color: "#000000",
-    textAlign: "left",
-    width: "100%", // spans full container width
-    marginBottom: 10, // spacing below title
-    // marginTop: 20, // spacing above title if needed
+    marginBottom: 8,
+  },
+
+  seeAllText: {
+    fontFamily: "DM Sans",
+    fontWeight: "400",
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: 0.01,
+    color: "rgba(0, 0, 0, 0.5)",
+    textAlign: "right",
+  },
+
+  bottomButtonContainer: {
+    width: "100%",
+    alignItems: "flex-end", // right align
+    marginTop: 20,
+    marginBottom: 90, // space from bottom of ScrollView
+  },
+
+  bottomButton: {
+    backgroundColor: "#1773B0",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+
+  bottomButtonText: {
+    fontFamily: "DM Sans",
+    fontWeight: "500",
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
+
+  box: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#ccc",
+    borderRadius: 12,
+    marginBottom: 30, // space between boxes
+  },
+
+  layer1: {
+    position: "absolute",
+    width: 300,
+    height: 208,
+    backgroundColor: "#E3EDF4",
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    top: 20,
+    zIndex: 2,
+  },
+  layer2: {
+    position: "absolute",
+    width: 270,
+    height: 186,
+    backgroundColor: "#CDD5D9",
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    top: 50, // slight offset to create layering
+    zIndex: 1,
   },
 });

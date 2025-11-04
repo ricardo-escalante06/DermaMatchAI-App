@@ -12,6 +12,7 @@
     "extra": {
       "VITE_SUPABASE_URL": "https://ifnjzcxckkrmfijgcsly.supabase.co",
       "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmbmp6Y3hja2tybWZpamdjc2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NTM4MTgsImV4cCI6MjA3NTUyOTgxOH0.lcacuPTp_sY1ODsM_p0JnQ7tgY3xkeSEm9grk832jFU"
+      
     },
     "ios": {
       "supportsTablet": true,

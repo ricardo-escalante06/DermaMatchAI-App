@@ -17,19 +17,41 @@ import shoppingpageiconFilled from "../assets/images/shoppingpageiconFilled.png"
 import profilepageicon from "../assets/images/profilepageicon.png";
 import profilepageiconFilled from "../assets/images/profilepageiconFilled.png";
 
+
 const Tab = createBottomTabNavigator();
 const TAB_WIDTH = 351;
 
-export default function MyTabs() {
+export default function MyTabs(route) {
+  const userId = route.params
+   if (!userId) {
+    console.warn("userId not found in MyTabs route params!");
+  }
+
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
       tabBar={(props) => <CustomTabBar {...props} />}
     >
-      <Tab.Screen name="HomePageScreen" component={HomePageScreen} />
-      <Tab.Screen name="CameraPageScreen" component={CameraPageScreen} />
-      <Tab.Screen name="ShoppingPageScreen" component={ShoppingPageScreen} />
-      <Tab.Screen name="ProfilePageScreen" component={ProfilePageScreen} />
+      <Tab.Screen
+        name="HomePageScreen"
+        component={HomePageScreen}
+        initialParams={{ userId }} 
+      />
+      <Tab.Screen
+        name="CameraPageScreen"
+        component={CameraPageScreen}
+        initialParams={{ userId }}
+      />
+      <Tab.Screen
+        name="ShoppingPageScreen"
+        component={ShoppingPageScreen}
+        initialParams={{ userId }}
+      />
+      <Tab.Screen
+        name="ProfilePageScreen"
+        component={ProfilePageScreen}
+        initialParams={{ userId }}
+      />
     </Tab.Navigator>
   );
 }

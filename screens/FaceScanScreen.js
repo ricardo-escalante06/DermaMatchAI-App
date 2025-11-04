@@ -46,13 +46,13 @@ export default function FaceScanScreen({ navigation }) {
   const duration = 4000;
 
   useEffect(() => {
-  async function loadUserId() {
-    const id = await fetchUserId();
-    if (id) setUserId(id);
-  }
+    async function loadUserId() {
+      const id = await fetchUserId();
+      if (id) setUserId(id);
+    }
 
-  loadUserId();
-}, []);
+    loadUserId();
+  }, []);
 
   async function uploadPhoto(user_id) {
     // Read file as base64
@@ -88,6 +88,16 @@ export default function FaceScanScreen({ navigation }) {
     try {
       if (!userId) throw new Error("User ID is required");
 
+      let validProducts = null;
+      if (
+        products && (Array.isArray(products) || typeof products === "object")
+      ) {
+        validProducts = products;
+      } else {
+        console.warn("Invalid products data, saving as null");
+        validProducts = null; // or [] if you prefer an empty array
+      }
+
       const { data, error } = await supabase.from("scans").insert([
         {
           user_id: userId,
@@ -102,7 +112,7 @@ export default function FaceScanScreen({ navigation }) {
       return data;
     } catch (err) {
       console.error("Failed to save scan to DB:", err.message);
-      throw err;
+      return null;
     }
   }
 
@@ -158,72 +168,72 @@ export default function FaceScanScreen({ navigation }) {
 
       formData.append("data", JSON.stringify(answers));
 
-      // const response = await fetch(
-      //   "https://dermamatch-mvp-1.onrender.com/recommend-image",
+      const response = await fetch(
+        "https://dermamatch-mvp-1.onrender.com/recommend-image",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+        console.log("Parsed JSON response:", data);
+      } catch (err) {
+        console.error("Failed to parse JSON:", err, "\nRaw response:", text);
+        return;
+      }
+
+      // const data = [
       //   {
-      //     method: "POST",
-      //     body: formData,
-      //   }
-      // );
-
-      // const text = await response.text();
-      // let data;
-      // try {
-      //   data = JSON.parse(text);
-      //   console.log("Parsed JSON response:", data);
-      // } catch (err) {
-      //   console.error("Failed to parse JSON:", err, "\nRaw response:", text);
-      //   return;
-      // }
-
-      const data = [
-        {
-          imageUrl:
-            "https://incidecoder-content.storage.googleapis.com/4af1f671-feef-4683-b78c-ce2fc4a25c60/products/skincare-by-dr-v-trio-blemish-face-wash/skincare-by-dr-v-trio-blemish-face-wash_front_photo_original.jpeg",
-          name: "Skincare by Dr. V Trio Blemish Face Wash",
-          price: 15,
-          store: "Amazon",
-          type: "CLEANSER",
-        },
-        {
-          imageUrl:
-            "https://incidecoder-content.storage.googleapis.com/694142fa-e0a9-4c88-af6f-55a88063306d/products/dr-g-aclear-balancing-toner/dr-g-aclear-balancing-toner_front_photo_original.jpeg",
-          name: "Dr. G AClear Balancing Toner",
-          price: 20,
-          store: "Ulta",
-          type: "TONER",
-        },
-        {
-          imageUrl:
-            "https://incidecoder-content.storage.googleapis.com/e309372a-9f13-427f-a9b1-a30d4286c88e/products/fauno-serum-regenerador-niacinamida-y-uva-fauno/fauno-serum-regenerador-niacinamida-y-uva-fauno_front_photo_original.jpeg",
-          name: "Fauno Serum Regenerador Niacinamida Y UVA Fauno",
-          price: 30,
-          store: "Amazon",
-          type: "SERUM",
-        },
-        {
-          imageUrl:
-            "https://incidecoder-content.storage.googleapis.com/deae880c-67c1-430b-82f0-032cb5220a11/products/aurora-dionis-dermacosmetics-ndeg13-nourishing-gel-more-skin-types-hydraterend-voedend-herstellend/aurora-dionis-dermacosmetics-ndeg13-nourishing-gel-more-skin-types-hydraterend-voedend-herstellend_front_photo_original.jpeg",
-          name: "Aurora Dionis Dermacosmetics N°13 Nourishing Gel - More Skin Types ¦ Hydraterend Voedend Herstellend",
-          price: 25,
-          store: "Amazon",
-          type: "MOISTURIZER",
-        },
-        {
-          imageUrl:
-            "https://incidecoder-content.storage.googleapis.com/e9b074b1-db9d-4109-b22a-1e46779569b9/products/dr-g-green-mild-up-sun-spf-50-pa-2021/dr-g-green-mild-up-sun-spf-50-pa-2021_front_photo_original.jpeg",
-          name: "Dr. G Green Mild Up Sun+ SPF 50+ Pa++++ (2021)",
-          price: 24,
-          store: "YesStyle",
-          type: "SUNSCREEN",
-        },
-      ];
+      //     imageUrl:
+      //       "https://incidecoder-content.storage.googleapis.com/4af1f671-feef-4683-b78c-ce2fc4a25c60/products/skincare-by-dr-v-trio-blemish-face-wash/skincare-by-dr-v-trio-blemish-face-wash_front_photo_original.jpeg",
+      //     name: "Skincare by Dr. V Trio Blemish Face Wash",
+      //     price: 15,
+      //     store: "Amazon",
+      //     type: "CLEANSER",
+      //   },
+      //   {
+      //     imageUrl:
+      //       "https://incidecoder-content.storage.googleapis.com/694142fa-e0a9-4c88-af6f-55a88063306d/products/dr-g-aclear-balancing-toner/dr-g-aclear-balancing-toner_front_photo_original.jpeg",
+      //     name: "Dr. G AClear Balancing Toner",
+      //     price: 20,
+      //     store: "Ulta",
+      //     type: "TONER",
+      //   },
+      //   {
+      //     imageUrl:
+      //       "https://incidecoder-content.storage.googleapis.com/e309372a-9f13-427f-a9b1-a30d4286c88e/products/fauno-serum-regenerador-niacinamida-y-uva-fauno/fauno-serum-regenerador-niacinamida-y-uva-fauno_front_photo_original.jpeg",
+      //     name: "Fauno Serum Regenerador Niacinamida Y UVA Fauno",
+      //     price: 30,
+      //     store: "Amazon",
+      //     type: "SERUM",
+      //   },
+      //   {
+      //     imageUrl:
+      //       "https://incidecoder-content.storage.googleapis.com/deae880c-67c1-430b-82f0-032cb5220a11/products/aurora-dionis-dermacosmetics-ndeg13-nourishing-gel-more-skin-types-hydraterend-voedend-herstellend/aurora-dionis-dermacosmetics-ndeg13-nourishing-gel-more-skin-types-hydraterend-voedend-herstellend_front_photo_original.jpeg",
+      //     name: "Aurora Dionis Dermacosmetics N°13 Nourishing Gel - More Skin Types ¦ Hydraterend Voedend Herstellend",
+      //     price: 25,
+      //     store: "Amazon",
+      //     type: "MOISTURIZER",
+      //   },
+      //   {
+      //     imageUrl:
+      //       "https://incidecoder-content.storage.googleapis.com/e9b074b1-db9d-4109-b22a-1e46779569b9/products/dr-g-green-mild-up-sun-spf-50-pa-2021/dr-g-green-mild-up-sun-spf-50-pa-2021_front_photo_original.jpeg",
+      //     name: "Dr. G Green Mild Up Sun+ SPF 50+ Pa++++ (2021)",
+      //     price: 24,
+      //     store: "YesStyle",
+      //     type: "SUNSCREEN",
+      //   },
+      // ];
 
       const imageUrl = await uploadPhoto(userId);
       setScanResult(imageUrl);
 
       saveScanToDatabase(userId, imageUrl, data);
-      
+
       navigation.replace("MainTabs", { userId: userId });
     } catch (err) {
       console.error("Failed to save scan2:", err);

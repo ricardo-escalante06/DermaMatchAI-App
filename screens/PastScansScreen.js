@@ -1,37 +1,35 @@
-// PastScansScreen.js
 import { Image } from "expo-image";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import PastFaceScan from "../components/PastFaceScan";
 
-export default function PastScansScreen({
-  navigation,
-  scans,
-  itemSpacing = 20,
-}) {
-  // scans: array of objects [{ id, date, skinType, products }, ...]
+export default function PastScansScreen({ navigation, route }) {
+  const scans = route.params?.scans || [];
 
-  const tempScans = [
-    {
-      id: 1,
-      date: "08/20/2025",
-      skinType: "Dry, Oily",
-      products: ["Product A", "Product B", "Product C"],
-    },
-    {
-      id: 2,
-      date: "07/15/2025",
-      skinType: "Normal",
-      products: ["Product D", "Product E"],
-    },
-  ];
-
-  scans = scans || tempScans;
+  const displayedScans =
+    scans.length > 0
+      ? scans
+      : [
+          {
+            id: 1,
+            created_at: "2025-08-20T00:00:00Z",
+            skinType: "Dry, Oily",
+            scan_image_url: null,
+            products: ["Product A", "Product B", "Product C"],
+          },
+          {
+            id: 2,
+            created_at: "2025-07-15T00:00:00Z",
+            skinType: "Normal",
+            scan_image_url: null,
+            products: ["Product D", "Product E"],
+          },
+        ];
 
   return (
     <View style={styles.container}>
@@ -50,20 +48,28 @@ export default function PastScansScreen({
       <Text style={styles.title}>Your Past Scans</Text>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {scans && scans.length > 0 ? (
-          scans.map((scan, index) => (
+        {displayedScans.length > 0 ? (
+          displayedScans.map((scan, index) => (
             <View
-              key={index}
+              key={scan.id}
               style={{
-                marginBottom: index !== scans.length - 1 ? itemSpacing : 0,
+                marginBottom: index !== displayedScans.length - 1 ? 20 : 0,
               }}
             >
               <PastFaceScan
-                image={require("../assets/images/dermaTestScan.png")}
-                scanDate={scan.date}
-                skinType={scan.skinType}
-                products={scan.products.join(", ")}
-                onPress={() => console.log("View More")}
+                image={
+                  scan.scan_image_url
+                    ? { uri: scan.scan_image_url }
+                    : require("../assets/images/dermaTestScan.png")
+                }
+                scanDate={new Date(scan.created_at).toLocaleDateString()}
+                skinType={scan.skinType || "Unknown"}
+                products={
+                  scan.products
+                    ? scan.products.map((p) => p.name || p).join(", ")
+                    : "No products"
+                }
+                onPress={() => console.log("View More", scan.id)}
               />
             </View>
           ))
@@ -79,7 +85,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 60, // for top spacing
+    paddingTop: 60,
   },
   arrowContainer: {
     position: "absolute",
@@ -100,33 +106,14 @@ const styles = StyleSheet.create({
     textAlign: "left",
     letterSpacing: 0.01,
     color: "#000000",
-    marginLeft: 40, // matches ScrollView horizontal padding
-    marginBottom: 20, // space below title
+    marginLeft: 40,
+    marginBottom: 20,
     marginTop: 80,
   },
   scrollContent: {
     paddingBottom: 40,
     paddingHorizontal: 40,
     backgroundColor: "#fff",
-  },
-  scanBox: {
-    width: "100%",
-    backgroundColor: "#E3EDF4",
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  scanText: {
-    fontFamily: "DM Sans",
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#000",
-    marginBottom: 4,
   },
   noScansText: {
     fontFamily: "DM Sans",

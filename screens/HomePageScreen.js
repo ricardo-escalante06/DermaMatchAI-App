@@ -17,6 +17,7 @@ import { supabase } from "../supabase/supabaseClient";
 export default function HomePageScreen({ navigation, route }) {
   const [userId, setUserId] = useState(null);
 
+  const [scans, setScans] = useState([]);
   const [hasScans, setHasScans] = useState(false);
   const [scanCount, setScanCount] = useState(null);
 
@@ -27,19 +28,12 @@ export default function HomePageScreen({ navigation, route }) {
   const [items, setItems] = useState([]);
 
   const [image, setImage] = useState("");
-  const [scanDate, setScanDate] = useState("08/20/2025");
-  const [skinType, setSkinType] = useState("Dry, Oily");
-  const [products, setProducts] = useState([
-    "Item Name",
-    " Item Name",
-    "Item...",
-  ]);
 
   const screenHeight = Dimensions.get("window").height;
 
   function handleStartFaceScan() {
     console.log("Start Face Scan button pressed");
-    // navigation.navigate("Face Scan");
+    navigation.navigate("CameraPageScreen");
   }
 
   useEffect(() => {
@@ -60,6 +54,8 @@ export default function HomePageScreen({ navigation, route }) {
         // console.log(userId);
 
         const scans = await getUserScans(userId); // fetch scans for the user
+        setScans(scans);
+
         const count = scans.length;
         setScanCount(count);
 
@@ -74,6 +70,8 @@ export default function HomePageScreen({ navigation, route }) {
 
           const imageUrl = recent.scan_image_url;
           setImage(imageUrl);
+
+          // get name from profiles table
 
           // Calculate number of days since scan
           const scanDate = new Date(recent.created_at);
@@ -155,8 +153,8 @@ export default function HomePageScreen({ navigation, route }) {
               image={{ uri: image }}
               scanDate={mostRecentScan?.created_at || ""}
               // skinType={mostRecentScan?.skin_type || "Unknown"}
-              products={(items || []).map((p) => p.name).join(", ")}
-              onPress={() => navigation.navigate("Past Scans")}
+              products={(items).map((p) => p.name).join(", ")}
+              onPress={() => navigation.navigate("Past Scans", { scans: scans})}
             />
           </View>
 

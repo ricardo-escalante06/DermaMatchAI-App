@@ -23,7 +23,7 @@ export default function LoginScreen({ navigation }) {
       alert(error.message);
     } else {
       await addUser();
-      alert("Login Successful!");
+      // alert("Login Successful!");
       navigation.navigate("Face Scan");
     }
   }

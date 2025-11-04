@@ -2,10 +2,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import FaceScanScreen from "./screens/FaceScanScreen";
+// import FaceScanScreen from "./components/FaceScanOverlay";
 import HomeScreen from "./screens/HomeScreen";
 import LoginScreen from "./screens/LoginScreen";
 import PastScansScreen from "./screens/PastScansScreen";
 import SignUpScreen from "./screens/SignUpScreen";
+
 
 import myTabs from "./navigation/myTabs";
 
@@ -14,7 +16,7 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="MainTabs">
+      <Stack.Navigator initialRouteName="Home">
         <Stack.Screen
           name="Home"
           component={HomeScreen}

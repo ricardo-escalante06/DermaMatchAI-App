@@ -13,7 +13,7 @@ import GradientBoxContainer from "../components/GradientBoxContainer";
 import TeaserRecommendedRoutine from "../components/TeaserRecommendedRoutine";
 
 export default function HomePageScreen({ navigation }) {
-  const [hasScans, setHasScans] = useState(true);
+  const [hasScans, setHasScans] = useState(false);
 
   const [name, setName] = useState("Jennifer");
   const [numberDays, setNumberDays] = useState(1);
@@ -114,7 +114,9 @@ export default function HomePageScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          <View style={{ width: "100%", alignItems: "center", marginBottom: 20 }}>
+          <View
+            style={{ width: "100%", alignItems: "center", marginBottom: 20 }}
+          >
             {/* Back layers */}
             <View style={[styles.layer1]} />
             <View style={[styles.layer2]} />

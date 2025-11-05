@@ -1,18 +1,18 @@
 import { useState } from "react";
 import {
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import RoutineItem from "../components/RoutineItem";
 
 export default function FullRoutineScreen({ navigation, route }) {
   const [sortModalVisible, setSortModalVisible] = useState(false);
-  const [sortOption, setSortOption] = useState("Name");
+  const [sortOption, setSortOption] = useState("Type");
 
   let items = route.params?.items || [];
 

@@ -9,7 +9,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import AccountSignInOptions from "../components/accountSignInOptions";
 import { addNewUser, loginUser } from "../supabase/auth";
@@ -40,8 +40,9 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "#FFFFFF"}}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} // adjust 80 if needed
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}

@@ -61,7 +61,7 @@ export default function HomeScreen({ navigation }) {
           style={styles.loginUpbutton}
           onPress={() => navigation.navigate("Login")}
         >
-          <Text style={styles.loginbuttonText}>LOG IN TO EXISTING ACCOUNT</Text>
+          <Text style={styles.loginbuttonText}>LOG IN</Text>
         </TouchableOpacity>
       </View>
     </View>

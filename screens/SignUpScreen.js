@@ -43,8 +43,9 @@ export default function SignUpScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} //
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -161,7 +162,11 @@ export default function SignUpScreen({ navigation }) {
               ]}
               onPress={() => submit(name, email, password, confirmPassword)}
               disabled={
-                !name || !email || !password || !acceptedTerms || !confirmPassword
+                !name ||
+                !email ||
+                !password ||
+                !acceptedTerms ||
+                !confirmPassword
               }
             >
               <Text style={styles.signUpbuttonText}>SIGN UP</Text>

@@ -148,7 +148,7 @@ export default function HomePageScreen({ navigation, route }) {
       {hasScans ? (
         <>
           <Text style={styles.sectionTitle}>Your Progress</Text>
-          <GradientBoxContainer number={numberDays} />
+          <GradientBoxContainer number={numberDays} onPressButton={handleStartFaceScan}/>
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your Past Scans</Text>

@@ -3,7 +3,8 @@ import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import CameraPageScreen from "../screens/FaceScanScreen";
 import HomePageScreen from "../screens/HomePageScreen";
 import ProfilePageScreen from "../screens/ProfilePageScreen";
-import ShoppingPageScreen from "../screens/ShoppingPageScreen";
+// import ShoppingPageScreen from "../screens/ShoppingPageScreen";
+import ProductPageScreen from "../screens/ProductPageScreen";
 
 import homepageicon from "../assets/images/homepageicon.png";
 import homepageiconFilled from "../assets/images/homepageiconFilled.png";
@@ -22,7 +23,7 @@ const Tab = createBottomTabNavigator();
 const TAB_WIDTH = 351;
 
 export default function MyTabs(route) {
-  const userId = route.params
+  const userId = route.params || {}
    if (!userId) {
     console.warn("userId not found in MyTabs route params!");
   }
@@ -30,7 +31,7 @@ export default function MyTabs(route) {
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName="ShoppingPageScreen"
+      initialRouteName="HomePageScreen"
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen
@@ -45,7 +46,7 @@ export default function MyTabs(route) {
       />
       <Tab.Screen
         name="ShoppingPageScreen"
-        component={ShoppingPageScreen}
+        component={ProductPageScreen}
         initialParams={{ userId }}
       />
       <Tab.Screen

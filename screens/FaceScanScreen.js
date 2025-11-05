@@ -90,7 +90,8 @@ export default function FaceScanScreen({ navigation }) {
 
       let validProducts = null;
       if (
-        products && (Array.isArray(products) || typeof products === "object")
+        products &&
+        (Array.isArray(products) || typeof products === "object")
       ) {
         validProducts = products;
       } else {
@@ -232,9 +233,9 @@ export default function FaceScanScreen({ navigation }) {
       const imageUrl = await uploadPhoto(userId);
       setScanResult(imageUrl);
 
-      saveScanToDatabase(userId, imageUrl, data);
+      await saveScanToDatabase(userId, imageUrl, data);
 
-      navigation.replace("MainTabs", { userId: userId });
+      navigation.replace("MainTabs", { userId: userId , screen: "ShoppingPageScreen"});
     } catch (err) {
       console.error("Failed to save scan2:", err);
       alert("Failed to save scan: " + err.message);
@@ -329,10 +330,17 @@ export default function FaceScanScreen({ navigation }) {
             <Text style={styles.modalSteps}>Step 1 of 2</Text>
             <Text style={styles.modalHeading}>Face Scanning</Text>
 
-            <Image
-              source={require("../assets/images/penguinGif.gif")}
-              style={styles.modalImage}
-            />
+            <View style={styles.imageWrapper}>
+              <Image
+                source={require("../assets/images/instructions.gif")}
+                style={styles.modalImage}
+                contentFit="cover"
+                transition={200}
+                recyclingKey="instructions-gif" // helps reset animation
+                autoplay
+                loop
+              />
+            </View>
 
             <Text style={styles.modalText}>
               Do you consent to participate in DermaMatch AI skin scan?
@@ -348,7 +356,9 @@ export default function FaceScanScreen({ navigation }) {
 
               <Pressable
                 style={styles.modalButtonNo}
-                onPress={() => navigation.replace("MainTabs", { userId: userId })}
+                onPress={() =>
+                  navigation.replace("MainTabs", { userId: userId })
+                }
               >
                 <Text style={styles.modalButtonNoText}>No</Text>
               </Pressable>
@@ -625,10 +635,18 @@ const styles = StyleSheet.create({
     color: "#000",
     marginVertical: 20,
   },
-  modalImage: {
-    width: 186,
-    height: 194,
+  imageWrapper: {
+    width: 200, // half of 360
+    height: 300, // roughly scaled down but smaller than full height
+    overflow: "hidden",
     alignSelf: "center",
+  },
+  modalImage: {
+    width: 200,
+    height: 400, // maintains aspect ratio (≈2.17x width)
+    top: -80, // hide 35px from top
+    position: "absolute",
+    resizeMode: "cover",
   },
   buttonRow: {
     flexDirection: "row",

@@ -25,9 +25,9 @@ export default function AccountSignInOptions({ headerText }) {
           <View key={index} style={styles.circle}>
             <TouchableOpacity
               onPress={() => {
-                if (index === 0) Alert.alert("GOOGLE");
-                else if (index === 1) Alert.alert("APPLE");
-                else if (index === 2) Alert.alert("MICROSOFT");
+                if (index === 0) Alert.alert("To be added");
+                else if (index === 1) Alert.alert("To be added");
+                else if (index === 2) Alert.alert("To be added");
               }}
             >
               <Image source={img} style={styles.circleImage} />

@@ -1,9 +1,8 @@
-import { decode as atob } from "base-64";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import * as FileSystem from "expo-file-system/legacy";
 import { Image } from "expo-image";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Button,
   Modal,
   Pressable,
@@ -20,13 +19,22 @@ import FaceOval from "../components/FaceOval";
 import Slider from "@react-native-community/slider";
 import GradientSpinner from "../components/GradientSpinner";
 
+import InfoDot from "../components/InfoDot";
+
+import { decode as atob } from "base-64";
+import * as FileSystem from "expo-file-system/legacy"; // or "expo-file-system" depending on your version
+
 export default function FaceScanScreen({ navigation }) {
-  const [facing, setFacing] = useState("front"); // 'front' | 'back'
+  const [facing, setFacing] = useState("front");
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(true);
   const [animationStart, setAnimationStart] = useState(false);
-  const [capturedPhotoUri, setCapturedPhotoUri] = useState(null);
+
+  // State to hold full photo details including width/height
+  const [capturedPhotoDetails, setCapturedPhotoDetails] = useState(null);
+  const [imageLayout, setImageLayout] = useState({ width: 0, height: 0 });
+
   const [photoTaken, setPhotoTaken] = useState(false);
   const [startClicked, setStartClicked] = useState(false);
 
@@ -36,102 +44,40 @@ export default function FaceScanScreen({ navigation }) {
   const [skinSensitivity, setSkinSensitivity] = useState(0);
   const [makeupUsage, setMakeupUsage] = useState(null);
 
+  // --- API 1 States (Image Scan) ---
   const [loadingResults, setLoadingResults] = useState(false);
   const [scanResult, setScanResult] = useState(null);
 
+  // --- API 2 States (Routine) ---
+  const [loadingRoutine, setLoadingRoutine] = useState(false);
+  const [routineResult, setRoutineResult] = useState(null);
+
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
-
   const [userId, setUserId] = useState(null);
-
   const duration = 4000;
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  // --- API ENDPOINTS ---
+  const BASE_URL = "https://dermamatch-mvp-1.onrender.com";
+  const SCAN_API_URL = `${BASE_URL}/recommend-image-test`;
+  const ROUTINE_API_URL = `${BASE_URL}/recommend-routine-test`;
 
   useEffect(() => {
     async function loadUserId() {
       const id = await fetchUserId();
       if (id) setUserId(id);
     }
-
     loadUserId();
   }, []);
 
-  async function uploadPhoto(user_id) {
-    // Read file as base64
-    const base64 = await FileSystem.readAsStringAsync(capturedPhotoUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // Convert base64 → Uint8Array (Supabase expects this)
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-
-    const fileName = `user-${user_id}/photo-${Date.now()}.jpg`;
-
-    const { data, error } = await supabase.storage
-      .from("scan-images")
-      .upload(fileName, bytes, {
-        contentType: "image/jpeg",
-        upsert: true,
-      });
-
-    if (error) {
-      console.error("Upload failed:", error);
-      throw error;
-    }
-
-    const { data: urlData } = supabase.storage
-      .from("scan-images")
-      .getPublicUrl(fileName);
-
-    return urlData.publicUrl;
-  }
-
-  async function saveScanToDatabase(userId, scanImageUrl, products = null) {
-    try {
-      if (!userId) throw new Error("User ID is required");
-
-      let validProducts = null;
-      if (
-        products &&
-        (Array.isArray(products) || typeof products === "object")
-      ) {
-        validProducts = products;
-      } else {
-        console.warn("Invalid products data, saving as null");
-        validProducts = null; // or [] if you prefer an empty array
-      }
-
-      const { data, error } = await supabase.from("scans").insert([
-        {
-          user_id: userId,
-          scan_image_url: scanImageUrl,
-          products: products, // should be a JS object or array; Supabase converts to jsonb
-        },
-      ]);
-
-      if (error) throw error;
-
-      console.log("Scan saved to database:", data);
-      return data;
-    } catch (err) {
-      console.error("Failed to save scan to DB:", err.message);
-      return null;
-    }
-  }
-
   async function fetchUserId() {
     const { data: sessionData, error } = await supabase.auth.getSession();
-    if (error) {
-      console.log("Error fetching session:", error.message);
-      return null;
-    }
-    if (!sessionData?.session) {
-      console.log("No active session, user not logged in");
-      return null;
-    }
+    if (error || !sessionData?.session) return null;
     return sessionData.session.user.id;
   }
 
   if (!permission) return <View />;
-
   if (!permission.granted) {
     return (
       <View style={styles.container}>
@@ -143,120 +89,288 @@ export default function FaceScanScreen({ navigation }) {
     );
   }
 
-  async function getResults(sensitivityAnswer, makeupAnswer) {
-    setLoadingResults(true);
-
+  // --- HELPER: Upload Photo to Supabase Storage ---
+  async function uploadPhoto(currentUserId, uri) {
     try {
-      const userId = await fetchUserId();
-      setUserId(userId);
-      if (!userId) {
-        alert("Please log in first!");
-        return;
-      }
-
-      const formData = new FormData();
-
-      formData.append("image", {
-        uri: capturedPhotoUri,
-        name: "photo.jpg",
-        type: "image/jpeg",
+      // 1. Read file as base64
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
       });
 
-      const answers = {
-        question1: sensitivityAnswer,
-        question2: makeupAnswer,
+      // 2. Convert base64 to ArrayBuffer for Supabase
+      const toByteArray = (str) => {
+        const binaryString = atob(str);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
       };
 
-      formData.append("data", JSON.stringify(answers));
+      const fileData = toByteArray(base64);
 
-      const response = await fetch(
-        "https://dermamatch-mvp-1.onrender.com/recommend-image",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      // 3. Create unique filename
+      const fileName = `user-${currentUserId}/scan-${Date.now()}.jpg`;
 
-      const text = await response.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-        console.log("Parsed JSON response:", data);
-      } catch (err) {
-        console.error("Failed to parse JSON:", err, "\nRaw response:", text);
-        return;
+      // 4. Upload
+      const { data, error } = await supabase.storage
+        .from("scan-images") // Make sure this bucket exists in Supabase Storage
+        .upload(fileName, fileData, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      // 5. Get Public URL
+      const { data: urlData } = supabase.storage
+        .from("scan-images")
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    } catch (err) {
+      console.error("Upload failed:", err.message);
+      throw err;
+    }
+  }
+
+  // --- HELPER: Save Metadata to Database ---
+  async function saveScanToDatabase(
+    currentUserId,
+    scanImageUrl,
+    analysisData,
+    routineData
+  ) {
+    try {
+      if (!currentUserId) throw new Error("User ID is required");
+
+      // Validate Routine Data (products)
+      let validProducts = null;
+      if (
+        routineData &&
+        (Array.isArray(routineData) || typeof routineData === "object")
+      ) {
+        validProducts = routineData;
+      } else {
+        console.warn("Invalid products data, saving as null");
       }
 
-      // const data = [
-      //   {
-      //     imageUrl:
-      //       "https://incidecoder-content.storage.googleapis.com/4af1f671-feef-4683-b78c-ce2fc4a25c60/products/skincare-by-dr-v-trio-blemish-face-wash/skincare-by-dr-v-trio-blemish-face-wash_front_photo_original.jpeg",
-      //     name: "Skincare by Dr. V Trio Blemish Face Wash",
-      //     price: 15,
-      //     store: "Amazon",
-      //     type: "CLEANSER",
-      //   },
-      //   {
-      //     imageUrl:
-      //       "https://incidecoder-content.storage.googleapis.com/694142fa-e0a9-4c88-af6f-55a88063306d/products/dr-g-aclear-balancing-toner/dr-g-aclear-balancing-toner_front_photo_original.jpeg",
-      //     name: "Dr. G AClear Balancing Toner",
-      //     price: 20,
-      //     store: "Ulta",
-      //     type: "TONER",
-      //   },
-      //   {
-      //     imageUrl:
-      //       "https://incidecoder-content.storage.googleapis.com/e309372a-9f13-427f-a9b1-a30d4286c88e/products/fauno-serum-regenerador-niacinamida-y-uva-fauno/fauno-serum-regenerador-niacinamida-y-uva-fauno_front_photo_original.jpeg",
-      //     name: "Fauno Serum Regenerador Niacinamida Y UVA Fauno",
-      //     price: 30,
-      //     store: "Amazon",
-      //     type: "SERUM",
-      //   },
-      //   {
-      //     imageUrl:
-      //       "https://incidecoder-content.storage.googleapis.com/deae880c-67c1-430b-82f0-032cb5220a11/products/aurora-dionis-dermacosmetics-ndeg13-nourishing-gel-more-skin-types-hydraterend-voedend-herstellend/aurora-dionis-dermacosmetics-ndeg13-nourishing-gel-more-skin-types-hydraterend-voedend-herstellend_front_photo_original.jpeg",
-      //     name: "Aurora Dionis Dermacosmetics N°13 Nourishing Gel - More Skin Types ¦ Hydraterend Voedend Herstellend",
-      //     price: 25,
-      //     store: "Amazon",
-      //     type: "MOISTURIZER",
-      //   },
-      //   {
-      //     imageUrl:
-      //       "https://incidecoder-content.storage.googleapis.com/e9b074b1-db9d-4109-b22a-1e46779569b9/products/dr-g-green-mild-up-sun-spf-50-pa-2021/dr-g-green-mild-up-sun-spf-50-pa-2021_front_photo_original.jpeg",
-      //     name: "Dr. G Green Mild Up Sun+ SPF 50+ Pa++++ (2021)",
-      //     price: 24,
-      //     store: "YesStyle",
-      //     type: "SUNSCREEN",
-      //   },
-      // ];
+      // Validate Face Analysis Data (face_results)
+      let validAnalysis = null;
+      if (
+        analysisData &&
+        (Array.isArray(analysisData) || typeof analysisData === "object")
+      ) {
+        validAnalysis = analysisData;
+      } else {
+        console.warn("Invalid analysis data, saving as null");
+      }
 
-      const imageUrl = await uploadPhoto(userId);
-      setScanResult(imageUrl);
+      // Insert into DB
+      const { data, error } = await supabase.from("scans").insert([
+        {
+          user_id: currentUserId,
+          scan_image_url: scanImageUrl,
+          products: validProducts, // Maps to 'products' column (jsonb)
+          face_results: validAnalysis, // Maps to 'face_results' column (jsonb)
+        },
+      ]);
 
-      await saveScanToDatabase(userId, imageUrl, data);
+      if (error) throw error;
 
-      navigation.replace("MainTabs", { userId: userId , screen: "ShoppingPageScreen"});
+      console.log("Scan saved to database successfully.");
+      return data;
     } catch (err) {
-      console.error("Failed to save scan2:", err);
-      alert("Failed to save scan: " + err.message);
-    } finally {
-      setLoadingResults(false);
+      console.error("Failed to save scan to DB:", err.message);
+      // We don't return null here so the UI can decide if it wants to proceed anyway
+      // or throw; but for now, we just log it.
+      return null;
     }
   }
 
   async function takePhoto() {
     if (!cameraRef.current) return;
+
+    // Quality 0.8 is good for uploads (reduces size while keeping detail)
     const photo = await cameraRef.current.takePictureAsync({
       base64: true,
       exif: true,
+      quality: 0.5,
     });
+
     setStartClicked(true);
-    setCapturedPhotoUri(photo.uri);
+    setCapturedPhotoDetails(photo);
     setPhotoTaken(true);
     await delay(250);
     setAnimationStart(true);
     await delay(duration + 250);
     setQuestionairModalVisible(true);
+  }
+
+  // Helper to convert slider value (0-4) to text for the API
+  function getSensitivityLabel(value) {
+    const labels = [
+      "Resistant",
+      "Normal",
+      "Mildly Sensitive",
+      "Sensitive",
+      "Very Sensitive",
+    ];
+    return labels[value] || "Normal";
+  }
+
+  async function handleContinue() {
+    if (isSaving) return; // Prevent double clicks
+    setIsSaving(true);
+
+    try {
+      console.log("Starting save process...");
+
+      // 1. Upload Photo to get URL
+      // (Ensure we have a userId, if not, try to fetch it again or fail)
+      const currentId = userId || (await fetchUserId());
+      if (!currentId) throw new Error("No user ID found");
+
+      const publicUrl = await uploadPhoto(currentId, capturedPhotoDetails.uri);
+      console.log("Image uploaded:", publicUrl);
+
+      // 2. Save Data to Supabase Table
+      await saveScanToDatabase(currentId, publicUrl, scanResult, routineResult);
+
+      // 3. Navigate
+      navigation.replace("MainTabs", {
+        userId: currentId,
+        screen: "ShoppingPageScreen",
+        params: {
+          routine: routineResult,
+          scanAnalysis: scanResult,
+        },
+      });
+    } catch (e) {
+      console.error("Error saving/navigating:", e);
+      alert(
+        "There was an error saving your results, but we will take you to your routine."
+      );
+
+      // Optional: Navigate anyway even if save failed?
+      navigation.replace("MainTabs", {
+        userId: userId,
+        screen: "ShoppingPageScreen",
+        params: {
+          routine: routineResult,
+          scanAnalysis: scanResult,
+        },
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  // --- API CALL 2: GET ROUTINE ---
+  async function fetchRoutine(sensitivityValue, makeupValue) {
+    setLoadingRoutine(true);
+
+    try {
+      console.log("Fetching Routine from API...");
+
+      const formData = new FormData();
+
+      // 1. Image
+      formData.append("image", {
+        uri: capturedPhotoDetails.uri,
+        name: "photo.jpg",
+        type: "image/jpeg",
+      });
+
+      // 2. Survey Data
+      // Map the numeric slider to a string for better AI context
+      const sensitivityString = getSensitivityLabel(sensitivityValue);
+
+      const surveyAnswers = {
+        skin_sensitivity: sensitivityString,
+        makeup_frequency: makeupValue,
+      };
+
+      formData.append("data", JSON.stringify(surveyAnswers));
+
+      const response = await fetch(ROUTINE_API_URL, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Routine API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+
+      console.log("Routine Loaded:", data);
+
+      setRoutineResult(data);
+      await delay(8000);
+    } catch (err) {
+      console.error("Error fetching routine:", err);
+      // Optional: Handle error state in UI here
+    } finally {
+      setLoadingRoutine(false);
+    }
+  }
+
+  // --- API CALL 1: GET IMAGE RESULTS ---
+  async function getResults(sensitivityAnswer, makeupAnswer) {
+    setLoadingResults(true);
+    setQuestionairModalVisible(false);
+
+    try {
+      console.log(
+        "Fetching Image Analysis from API...",
+        capturedPhotoDetails.uri
+      );
+
+      const formData = new FormData();
+      formData.append("image", {
+        uri: capturedPhotoDetails.uri,
+        name: "photo.jpg",
+        type: "image/jpeg",
+      });
+
+      const response = await fetch(SCAN_API_URL, {
+        method: "POST",
+        body: formData,
+      });
+
+      // console.log(formData);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Server Error Response:", errorText);
+        throw new Error(
+          `Scan API Error: ${response.status} \nServer says: ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log("Scan Data Received:", data);
+
+      // The API returns { analysis: [...], all_landmarks: [...] }
+      // We only need 'analysis' for the dots.
+      if (data.analysis) {
+        setScanResult(data.analysis);
+      } else {
+        setScanResult([]); // Fallback if empty
+      }
+
+      setLoadingResults(false);
+
+      // IMMEDIATELLY Start the second API call for the routine
+      fetchRoutine(sensitivityAnswer, makeupAnswer);
+    } catch (err) {
+      console.error("Error in getResults:", err);
+      alert("Failed to analyze image: " + err.message);
+      setLoadingResults(false);
+    }
   }
 
   return (
@@ -273,9 +387,12 @@ export default function FaceScanScreen({ navigation }) {
         </TouchableOpacity>
       )}
 
-      {/* Camera or captured image */}
-      <View style={{ flex: 1 }}>
-        {!capturedPhotoUri ? (
+      {/* Main Visual Area */}
+      <View
+        style={{ flex: 1, position: "relative" }}
+        onLayout={(e) => setImageLayout(e.nativeEvent.layout)}
+      >
+        {!capturedPhotoDetails ? (
           <CameraView
             style={styles.camera}
             facing={facing}
@@ -283,25 +400,62 @@ export default function FaceScanScreen({ navigation }) {
             mirror={true}
           />
         ) : (
-          <Image source={capturedPhotoUri} style={styles.capturedPhotoStyle} />
+          <>
+            <Image
+              source={capturedPhotoDetails.uri}
+              style={styles.capturedPhotoStyle}
+              contentFit="cover"
+            />
+
+            {/* --- DOT RENDERING LOGIC --- */}
+            {scanResult &&
+              imageLayout.width > 0 &&
+              scanResult.map((pt, idx) => {
+                // API returns x/y as 0-100 percentages
+                const screenX = (pt.x / 100) * imageLayout.width;
+                const screenY = (pt.y / 100) * imageLayout.height;
+
+                return (
+                  <InfoDot
+                    key={idx}
+                    x={screenX}
+                    y={screenY}
+                    title={pt.title}
+                    description={pt.description}
+                  />
+                );
+              })}
+
+            {/* --- NEW TOP BANNER (Visible when scan results exist) --- */}
+            {scanResult && !loadingResults && (
+              <View style={styles.resultBanner}>
+                <Text style={styles.bannerTitle}>Your Results Are Ready</Text>
+                <Text style={styles.bannerSubtitle}>
+                  Click each dot to learn more
+                </Text>
+              </View>
+            )}
+          </>
         )}
 
-        {/* FaceOval always visible */}
-        <View style={styles.faceOvalContainer}>
-          <FaceOval
-            width={325}
-            height={445}
-            ticks={100}
-            tickWidth={3}
-            tickHeight={20}
-            activeColor="#FFFFFF"
-            inactiveColor="#179BD7"
-            duration={duration}
-            startAnimation={animationStart}
-          />
-        </View>
+        {/* FaceOval - Visible ONLY during scanning phase */}
+        {!loadingResults && !scanResult && (
+          <View style={styles.faceOvalContainer} pointerEvents="none">
+            <FaceOval
+              width={325}
+              height={445}
+              ticks={100}
+              tickWidth={3}
+              tickHeight={20}
+              activeColor="#FFFFFF"
+              inactiveColor="#179BD7"
+              duration={duration}
+              startAnimation={animationStart}
+            />
+          </View>
+        )}
 
-        {/* Take Photo button disappears after clicked */}
+        {/* Initial Start Button */}
         {!photoTaken && (
           <View style={styles.buttonContainer}>
             {!startClicked && (
@@ -313,7 +467,33 @@ export default function FaceScanScreen({ navigation }) {
         )}
       </View>
 
-      {/* Modal */}
+      {/* --- BOTTOM BOX: HANDLES LOADING -> CONTINUE --- */}
+
+      {/* 1. Loading Routine State */}
+      {loadingRoutine && (
+        <View style={styles.routineBox}>
+          <ActivityIndicator
+            size="small"
+            color="#5592B8"
+            style={{ marginRight: 10 }}
+          />
+          <Text style={styles.routineBoxText}>Building your routine...</Text>
+        </View>
+      )}
+
+      {/* 2. Routine Done State */}
+      {!loadingRoutine && routineResult && (
+        <TouchableOpacity
+          style={[styles.routineBox, { backgroundColor: "#FFFFFF" }]}
+          onPress={handleContinue}
+        >
+          <Text style={[styles.routineBoxText, { fontWeight: "700" }]}>
+            Click to Continue
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* ... (Modals: Intro & Questionnaire) ... */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -329,23 +509,20 @@ export default function FaceScanScreen({ navigation }) {
           <View style={styles.modalView}>
             <Text style={styles.modalSteps}>Step 1 of 2</Text>
             <Text style={styles.modalHeading}>Face Scanning</Text>
-
             <View style={styles.imageWrapper}>
               <Image
                 source={require("../assets/images/instructions.gif")}
                 style={styles.modalImage}
                 contentFit="cover"
                 transition={200}
-                recyclingKey="instructions-gif" // helps reset animation
+                recyclingKey="instructions-gif"
                 autoplay
                 loop
               />
             </View>
-
             <Text style={styles.modalText}>
               Do you consent to participate in DermaMatch AI skin scan?
             </Text>
-
             <View style={styles.buttonRow}>
               <Pressable
                 style={styles.modalButtonYes}
@@ -353,7 +530,6 @@ export default function FaceScanScreen({ navigation }) {
               >
                 <Text style={styles.modalButtonYesText}>Yes</Text>
               </Pressable>
-
               <Pressable
                 style={styles.modalButtonNo}
                 onPress={() =>
@@ -367,7 +543,6 @@ export default function FaceScanScreen({ navigation }) {
         </LinearGradient>
       </Modal>
 
-      {/* Questionnaire Modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -380,16 +555,11 @@ export default function FaceScanScreen({ navigation }) {
 
             {modalStep === 1 && (
               <View style={{ alignItems: "center", width: "100%" }}>
-                {/* Title */}
                 <Text style={styles.sensitivityTitle}>Skin Sensitivity</Text>
-
-                {/* Subtitle */}
                 <Text style={styles.sensitivitySubtitle}>
                   How sensitive is your skin to products or external weather
                   conditions?
                 </Text>
-
-                {/* Slider */}
                 <Slider
                   style={{ width: "90%", marginTop: 15 }}
                   minimumValue={0}
@@ -401,15 +571,11 @@ export default function FaceScanScreen({ navigation }) {
                   maximumTrackTintColor="#E1E5EB"
                   thumbTintColor="#5592B8"
                 />
-
-                {/* Labels under slider */}
                 <View style={styles.sliderLabels}>
                   <Text style={styles.sliderLabel}>Not Sensitive</Text>
                   <Text style={styles.sliderLabel}>Sensitive</Text>
                   <Text style={styles.sliderLabel}>Super Sensitive</Text>
                 </View>
-
-                {/* Continue Button */}
                 <Pressable
                   style={styles.nextButton}
                   onPress={() => setModalStep(2)}
@@ -422,12 +588,9 @@ export default function FaceScanScreen({ navigation }) {
             {modalStep === 2 && (
               <View style={{ alignItems: "center", width: "100%" }}>
                 <Text style={styles.sensitivityTitle}>Makeup Usage</Text>
-
                 <Text style={styles.sensitivitySubtitle}>
                   How often do you use makeup?
                 </Text>
-
-                {/* Radio List */}
                 <View style={styles.radioGroup}>
                   {["Daily", "A few times a week", "Rarely, or never"].map(
                     (option) => (
@@ -459,8 +622,6 @@ export default function FaceScanScreen({ navigation }) {
                     )
                   )}
                 </View>
-
-                {/* Buttons Row */}
                 <View style={styles.modalStep2Buttons}>
                   <Pressable
                     style={[styles.backButton]}
@@ -468,12 +629,10 @@ export default function FaceScanScreen({ navigation }) {
                   >
                     <Text style={styles.backButtonText}>Back</Text>
                   </Pressable>
-
                   <Pressable
                     style={styles.finishButton}
                     onPress={() => {
                       if (!makeupUsage) return;
-                      setQuestionairModalVisible(false);
                       getResults(skinSensitivity, makeupUsage);
                     }}
                   >
@@ -495,16 +654,13 @@ export default function FaceScanScreen({ navigation }) {
           width: 50,
           height: 50,
           resizeMode: "contain",
-          transform: [
-            { translateX: -25 }, // half width
-            { translateY: -25 }, // half height
-          ],
-          zIndex: 20, // above camera & gradient
+          transform: [{ translateX: -25 }, { translateY: -25 }],
+          zIndex: 20,
         }}
       />
-      {/* Bottom gradient overlay */}
+
       <LinearGradient
-        colors={["#3478A2", "transparent"]} // Blue → nothing
+        colors={["#3478A2", "transparent"]}
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0.5, y: 0 }}
         style={styles.bottomGradient}
@@ -513,11 +669,9 @@ export default function FaceScanScreen({ navigation }) {
       {loadingResults && (
         <View style={styles.loadingScreen}>
           <GradientSpinner loading={loadingResults} />
-
           <View style={{ alignItems: "center", marginTop: 16 }}>
             <Text style={styles.loadingText}>
-              Finding The <Text style={styles.bold}>Perfect</Text> Routine{" "}
-              <Text style={styles.boldUnderline}>For you</Text>
+              Analyzing Your <Text style={styles.bold}>Skin</Text>...
             </Text>
           </View>
         </View>
@@ -531,6 +685,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
   },
+  // ... (Other existing styles) ...
   message: {
     textAlign: "center",
     paddingBottom: 10,
@@ -559,9 +714,9 @@ const styles = StyleSheet.create({
     fontStyle: "normal",
     fontWeight: "500",
     fontSize: 20,
-    lineHeight: 24, // line-height in px, 120% of 20px ≈ 24
+    lineHeight: 24,
     textAlign: "center",
-    letterSpacing: 0.01, // React Native uses em-ish units as decimal
+    letterSpacing: 0.01,
     color: "#FFFFFF",
     textShadowColor: "rgba(0, 0, 0, 0.25)",
     textShadowOffset: { width: 0, height: 4 },
@@ -586,6 +741,72 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 10,
   },
+
+  // --- NEW STYLES ---
+
+  // Top Banner Styles
+  resultBanner: {
+    position: "absolute",
+    width: 315,
+    height: 82,
+    top: 147,
+    alignSelf: "center",
+    backgroundColor: "rgba(23, 115, 176, 0.36)",
+    borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    zIndex: 50,
+  },
+  bannerTitle: {
+    fontFamily: "DM Sans",
+    fontStyle: "normal",
+    fontWeight: "500",
+    fontSize: 24,
+    lineHeight: 29,
+    textAlign: "center",
+    letterSpacing: 0.24,
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  bannerSubtitle: {
+    fontFamily: "DM Sans",
+    fontStyle: "normal",
+    fontWeight: "300",
+    fontSize: 13,
+    lineHeight: 16,
+    textAlign: "center",
+    letterSpacing: 0.13,
+    color: "#FFFFFF",
+  },
+
+  // Bottom Box Styles
+  routineBox: {
+    position: "absolute",
+    bottom: 50,
+    alignSelf: "center",
+    width: 332,
+    height: 59,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  routineBoxText: {
+    fontFamily: "DM Sans",
+    fontSize: 14,
+    color: "#2D3648",
+  },
+
+  // ... (Modal Styles unchanged) ...
   modalBackground: {
     position: "absolute",
     flex: 1,
@@ -636,15 +857,15 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   imageWrapper: {
-    width: 200, // half of 360
-    height: 300, // roughly scaled down but smaller than full height
+    width: 200,
+    height: 300,
     overflow: "hidden",
     alignSelf: "center",
   },
   modalImage: {
     width: 200,
-    height: 400, // maintains aspect ratio (≈2.17x width)
-    top: -80, // hide 35px from top
+    height: 400,
+    top: -80,
     position: "absolute",
     resizeMode: "cover",
   },
@@ -691,10 +912,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     width: "100%",
-    height: 250, // same as your original rectangle height
+    height: 250,
   },
-
-  /** Questionnaire */
   qBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
@@ -709,10 +928,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   qStepText: { fontSize: 14, color: "#888", marginBottom: 15 },
-
-  stepContainer: { alignItems: "center", width: "100%", marginVertical: 12 },
-  fade: { opacity: 0.35 },
-
   sensitivityTitle: {
     fontFamily: "DM Sans",
     fontSize: 18,
@@ -729,14 +944,11 @@ const styles = StyleSheet.create({
     width: "80%",
     color: "#000",
   },
-
   sliderLabels: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    // marginTop: 20,
   },
-
   sliderLabel: {
     fontFamily: "DM Sans",
     fontSize: 11,
@@ -745,13 +957,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     width: "33%",
   },
-
-  rowRight: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginTop: 18,
-  },
-
   nextButton: {
     backgroundColor: "#5592B8",
     marginTop: 50,
@@ -767,96 +972,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#FFF",
   },
-
-  qTitle: {
-    fontFamily: "DM Sans",
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-
-  qBtn: {
-    backgroundColor: "#179BD7",
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginVertical: 6,
-    width: "100%",
-    alignItems: "center",
-  },
-  qBtnText: {
-    color: "#fff",
-    fontSize: 16,
-    textAlign: "center",
-    fontFamily: "DM Sans",
-  },
-
-  bottomGradient: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    height: 250,
-  },
-
   radioGroup: {
     marginTop: 30,
     width: "100%",
     paddingHorizontal: 40,
-    gap: 16, // a little bigger gap
+    gap: 16,
   },
-
   radioRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12, // slightly more space
+    gap: 12,
   },
-
   radioCircle: {
-    width: 16, // bigger
-    height: 16, // bigger
+    width: 16,
+    height: 16,
     borderRadius: 8,
     borderWidth: 1.5,
     borderColor: "#D9D9D9",
     justifyContent: "center",
     alignItems: "center",
   },
-
   radioCircleSelected: {
     borderColor: "#5592B8",
   },
-
   radioDot: {
-    width: 8, // bigger
-    height: 8, // bigger
+    width: 8,
+    height: 8,
     borderRadius: 4,
     backgroundColor: "#5592B8",
   },
-
   radioLabel: {
     fontFamily: "DM Sans",
     fontStyle: "normal",
     fontWeight: "300",
-    fontSize: 14, // slightly bigger
+    fontSize: 14,
     lineHeight: 16,
     letterSpacing: 0.01,
     color: "#A0A0A0",
   },
-
   radioLabelSelected: {
-    color: "#2D3648", // darker when selected
+    color: "#2D3648",
     fontWeight: "500",
   },
-
   modalStep2Buttons: {
     flexDirection: "row",
-    justifyContent: "flex-end", // align to right
-    gap: 12, // space between buttons
+    justifyContent: "flex-end",
+    gap: 12,
     width: "100%",
     marginTop: 40,
   },
-
   backButton: {
-    width: 78, // match your rectangle width
+    width: 78,
     height: 35,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -865,17 +1031,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   backButtonText: {
     fontFamily: "DM Sans",
     fontWeight: "500",
     fontSize: 14,
-    lineHeight: 17, // 120% of 14px
+    lineHeight: 17,
     letterSpacing: 0.01,
     color: "#A0A0A0",
     textAlign: "center",
   },
-
   finishButton: {
     width: 78,
     height: 35,
@@ -884,7 +1048,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   finishButtonText: {
     fontFamily: "DM Sans",
     fontWeight: "500",
@@ -892,15 +1055,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     textAlign: "center",
   },
-
   loadingScreen: {
-    ...StyleSheet.absoluteFillObject, // covers the entire screen
-    backgroundColor: "#FFFFFF", // white background
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 100, // ensures it sits above everything else
+    zIndex: 100,
   },
-
   loadingText: {
     width: 294,
     height: 58,
@@ -908,12 +1069,12 @@ const styles = StyleSheet.create({
     fontStyle: "normal",
     fontWeight: "400",
     fontSize: 24,
-    lineHeight: 29, // 120%
+    lineHeight: 29,
     textAlign: "center",
     letterSpacing: 0.01 * 24,
     color: "#000000",
-    alignSelf: "center", // replaces absolute positioning
-    marginTop: 30, // adjust based on layout
+    alignSelf: "center",
+    marginTop: 30,
   },
   bold: {
     fontWeight: "700",

@@ -11,12 +11,17 @@
     "newArchEnabled": true,
     "extra": {
       "VITE_SUPABASE_URL": "https://ifnjzcxckkrmfijgcsly.supabase.co",
-      "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmbmp6Y3hja2tybWZpamdjc2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NTM4MTgsImV4cCI6MjA3NTUyOTgxOH0.lcacuPTp_sY1ODsM_p0JnQ7tgY3xkeSEm9grk832jFU"
-      
+      "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmbmp6Y3hja2tybWZpamdjc2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NTM4MTgsImV4cCI6MjA3NTUyOTgxOH0.lcacuPTp_sY1ODsM_p0JnQ7tgY3xkeSEm9grk832jFU",
+      "eas": {
+        "projectId": "d8c7a1ef-4206-41f4-bf04-f532034b8d54"
+      }
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.DermaMatchAI"
+      "bundleIdentifier": "com.ricardo.DermaMatchAI",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -37,7 +42,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

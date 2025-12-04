@@ -526,7 +526,7 @@ export default function FaceScanScreen({ navigation }) {
           style={styles.modalBackground}
         >
           <View style={styles.modalView}>
-            <Text style={styles.modalSteps}>Step 1 of 2</Text>
+            <Text style={styles.modalSteps}>Step 1 of 1</Text>
             <Text style={styles.modalHeading}>Face Scanning</Text>
             <View style={styles.imageWrapper}>
               <Image

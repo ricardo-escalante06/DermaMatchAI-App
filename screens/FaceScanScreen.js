@@ -60,8 +60,8 @@ export default function FaceScanScreen({ navigation }) {
 
   // --- API ENDPOINTS ---
   const BASE_URL = "https://dermamatch-mvp-1.onrender.com";
-  const SCAN_API_URL = `${BASE_URL}/recommend-image-test`;
-  const ROUTINE_API_URL = `${BASE_URL}/recommend-routine-test`;
+  const SCAN_API_URL = `${BASE_URL}/recommend-image`;
+  const ROUTINE_API_URL = `${BASE_URL}/recommend-routine`;
 
   useEffect(() => {
     async function loadUserId() {
@@ -308,8 +308,8 @@ export default function FaceScanScreen({ navigation }) {
 
       console.log("Routine Loaded:", data);
 
-      setRoutineResult(data);
-      await delay(8000);
+      setRoutineResult(data.routine);
+      // await delay(8000);
     } catch (err) {
       console.error("Error fetching routine:", err);
       // Optional: Handle error state in UI here

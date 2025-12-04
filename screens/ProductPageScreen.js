@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import RoutineItem from "../components/RoutineItem";
 import { supabase } from "../supabase/supabaseClient";

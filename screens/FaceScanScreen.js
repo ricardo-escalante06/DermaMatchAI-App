@@ -305,7 +305,6 @@ export default function FaceScanScreen({ navigation }) {
 
       const data = await response.json();
 
-
       console.log("Routine Loaded:", data);
 
       setRoutineResult(data.routine);
@@ -410,10 +409,30 @@ export default function FaceScanScreen({ navigation }) {
             {/* --- DOT RENDERING LOGIC --- */}
             {scanResult &&
               imageLayout.width > 0 &&
+              capturedPhotoDetails &&
               scanResult.map((pt, idx) => {
-                // API returns x/y as 0-100 percentages
-                const screenX = (pt.x / 100) * imageLayout.width;
-                const screenY = (pt.y / 100) * imageLayout.height;
+                const viewW = imageLayout.width;
+                const viewH = imageLayout.height;
+                const imgW = capturedPhotoDetails.width;
+                const imgH = capturedPhotoDetails.height;
+
+                // 1. Calculate Scale (Math.max is for COVER)
+                const scale = Math.max(viewW / imgW, viewH / imgH);
+
+                // 2. Rendered Size
+                const renderedW = imgW * scale;
+                const renderedH = imgH * scale;
+
+                // 3. Offsets
+                const offsetX = (renderedW - viewW) / 2;
+                const offsetY = (renderedH - viewH) / 2;
+
+                // 4. MIRROR FIX (Flip X)
+                const mirroredX = 100 - pt.x;
+
+                // 5. Final Calculation
+                const screenX = ((mirroredX / 100) * renderedW) - offsetX;
+                const screenY = ((pt.y / 100) * renderedH) - offsetY;
 
                 return (
                   <InfoDot
